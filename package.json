@@ -1,0 +1,33 @@
+{
+  "name": "personal-outlook-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for managing a personal Outlook (Microsoft consumer) account via Microsoft Graph.",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "personal-outlook-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "whoami": "node dist/scripts/whoami.js",
+    "clean": "rm -rf dist"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@azure/msal-node": "^2.16.2",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "isomorphic-fetch": "^3.0.0",
+    "keytar": "^7.9.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/isomorphic-fetch": "^0.0.39",
+    "@types/node": "^22.9.0",
+    "typescript": "^5.6.3"
+  }
+}
