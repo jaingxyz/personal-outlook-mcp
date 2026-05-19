@@ -101,6 +101,12 @@ Substitute the absolute path to `dist/index.js` and your client ID. Restart Clau
 | `personal_email_mark_read` | Mark a message read or unread. |
 | `personal_email_move` | Move a message to another folder (id or well-known name). |
 | `personal_email_delete` | Soft-delete (move to Deleted Items) by default; `hardDelete=true` is unrecoverable. |
+| `personal_email_send` | Send a new email immediately. Saves a copy to Sent Items. |
+| `personal_email_reply` | Reply to a message by id. `replyAll=true` to reply to all recipients. |
+| `personal_email_create_draft` | Create a draft in Drafts without sending. Returns a draftId. |
+| `personal_email_send_draft` | Send a previously created draft by id. |
+| `personal_email_list_attachments` | List attachments on a message (id, name, contentType, size). |
+| `personal_email_download_attachment` | Save a file attachment to disk. Defaults to `~/Downloads/personal-outlook-mcp/`. |
 
 Folder names accept Outlook well-known names: `inbox`, `sentitems`, `drafts`, `deleteditems`, `archive`, `junkemail`. Custom folders need their id (get it from `personal_email_list_folders`).
 
