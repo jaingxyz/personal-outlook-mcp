@@ -17,6 +17,22 @@ import {
   move,
   moveSchema,
 } from "./tools/mutate.js";
+import {
+  createDraft,
+  createDraftSchema,
+  reply,
+  replySchema,
+  send,
+  sendSchema,
+  sendDraft,
+  sendDraftSchema,
+} from "./tools/send.js";
+import {
+  downloadAttachment,
+  downloadAttachmentSchema,
+  listAttachments,
+  listAttachmentsSchema,
+} from "./tools/attachments.js";
 
 export function buildServer(): McpServer {
   const server = new McpServer({
@@ -95,6 +111,68 @@ export function buildServer(): McpServer {
       annotations: { destructiveHint: true },
     },
     async (args) => toolResult(await deleteMessage(args)),
+  );
+
+  server.registerTool(
+    "personal_email_send",
+    {
+      description:
+        "Send a new email immediately. A copy is saved to Sent Items. Use create_draft instead if you want to review in Outlook before sending.",
+      inputSchema: sendSchema.shape,
+      annotations: { destructiveHint: true },
+    },
+    async (args) => toolResult(await send(args)),
+  );
+
+  server.registerTool(
+    "personal_email_reply",
+    {
+      description:
+        "Reply to an existing message. Sends immediately. Pass replyAll=true to reply to all recipients of the original.",
+      inputSchema: replySchema.shape,
+      annotations: { destructiveHint: true },
+    },
+    async (args) => toolResult(await reply(args)),
+  );
+
+  server.registerTool(
+    "personal_email_create_draft",
+    {
+      description:
+        "Create a draft email in the Drafts folder without sending. Returns a draftId you can pass to personal_email_send_draft.",
+      inputSchema: createDraftSchema.shape,
+    },
+    async (args) => toolResult(await createDraft(args)),
+  );
+
+  server.registerTool(
+    "personal_email_send_draft",
+    {
+      description: "Send a previously created draft by id.",
+      inputSchema: sendDraftSchema.shape,
+      annotations: { destructiveHint: true },
+    },
+    async (args) => toolResult(await sendDraft(args)),
+  );
+
+  server.registerTool(
+    "personal_email_list_attachments",
+    {
+      description:
+        "List attachments on a message, with id, name, contentType, and size in bytes.",
+      inputSchema: listAttachmentsSchema.shape,
+    },
+    async (args) => toolResult(await listAttachments(args)),
+  );
+
+  server.registerTool(
+    "personal_email_download_attachment",
+    {
+      description:
+        "Download a file attachment to disk. Defaults to ~/Downloads/personal-outlook-mcp/. Returns the absolute path. Item and reference attachments are not supported.",
+      inputSchema: downloadAttachmentSchema.shape,
+    },
+    async (args) => toolResult(await downloadAttachment(args)),
   );
 
   return server;
