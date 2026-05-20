@@ -117,6 +117,20 @@ To sign out and forget the cached token:
 node -e "import('./dist/auth.js').then(m => m.signOut())"
 ```
 
+## MCPB bundle (Claude Desktop one-click install)
+
+A pre-packaged [MCPB bundle](https://github.com/anthropics/mcpb) is built from the `npm run bundle` script. **Currently macOS arm64 only** — the bundle includes a platform-specific native binary for the OS keyring backend, and we ship one platform at a time. Other OSes should install via `npx -y @jaingxyz/personal-outlook-mcp` (which fetches the right native binary at install time).
+
+To build and test locally:
+
+```bash
+npm run bundle
+# produces personal-outlook-mcp.mcpb (~5 MB)
+# double-click in Finder to install into Claude Desktop
+```
+
+The bundle's manifest declares three user-config fields, prompted at install: Azure client ID, tenant (default `consumers`), display timezone (default `America/Los_Angeles`).
+
 ## Using from a local source clone
 
 If you cloned the repo (instead of installing via npx), point Claude Desktop at the built script:

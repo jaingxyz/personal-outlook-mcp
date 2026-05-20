@@ -10,3 +10,7 @@ coverage/
 
 # per-user Claude Code settings
 .claude/settings.local.json
+
+# MCPB bundle artifacts (build output, do not commit)
+/bundle/
+*.mcpb
