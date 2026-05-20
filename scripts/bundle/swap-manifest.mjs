@@ -42,9 +42,7 @@ try {
     { cwd: work },
   );
 
-  console.error(
-    `[swap-manifest] swapped slim -> full manifest in ${mcpbPath}`,
-  );
+  console.error(`[swap-manifest] swapped slim -> full manifest in ${mcpbPath}`);
 } finally {
   rmSync(work, { recursive: true, force: true });
 }
