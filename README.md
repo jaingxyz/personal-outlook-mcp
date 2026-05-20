@@ -1,7 +1,9 @@
 # personal-outlook-mcp
 
 [![CI](https://github.com/jaingxyz/personal-outlook-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/jaingxyz/personal-outlook-mcp/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/jaingxyz/personal-outlook-mcp/actions/workflows/codeql.yml/badge.svg)](https://github.com/jaingxyz/personal-outlook-mcp/actions/workflows/codeql.yml)
 [![Semgrep](https://github.com/jaingxyz/personal-outlook-mcp/actions/workflows/semgrep.yml/badge.svg)](https://github.com/jaingxyz/personal-outlook-mcp/actions/workflows/semgrep.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/jaingxyz/personal-outlook-mcp/badge)](https://scorecard.dev/viewer/?uri=github.com/jaingxyz/personal-outlook-mcp)
 [![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](./LICENSE)
 
 A [Model Context Protocol](https://modelcontextprotocol.io/) server that exposes a personal Outlook (consumer Microsoft account) inbox **and calendar** to MCP clients like Claude Desktop. Talks to Microsoft Graph over HTTPS, uses MSAL device-code flow for OAuth, and stores tokens in the OS keyring.
