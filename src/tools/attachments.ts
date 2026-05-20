@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 jaingxyz
 import { z } from "zod";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
@@ -89,12 +91,12 @@ export async function downloadAttachment(
   };
 }
 
-function sanitizeFilename(name: string): string {
+export function sanitizeFilename(name: string): string {
   // Strip path separators and control chars; collapse weird whitespace.
   return name.replace(/[/\\\x00-\x1f]+/g, "_").trim() || "attachment";
 }
 
-function expandHome(p: string): string {
+export function expandHome(p: string): string {
   if (p === "~") return homedir();
   if (p.startsWith("~/")) return join(homedir(), p.slice(2));
   return p;

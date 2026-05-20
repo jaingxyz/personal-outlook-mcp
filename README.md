@@ -25,16 +25,11 @@ The required Graph delegated permissions (`Mail.ReadWrite`, `Mail.Send`, `offlin
 
 > If `portal.azure.com` returns `AADSTS5000225: This tenant has been blocked due to inactivity`, your MSA's auto-created "Default Directory" tenant has been deactivated and you can't reach the portal. Either join the [Microsoft 365 Developer Program](https://developer.microsoft.com/en-us/microsoft-365/dev-program) for a fresh sandbox tenant, or use Option B below.
 
-### Option B — Borrow the Graph Explorer client ID (dev-only)
+### Option B — Borrow a public client ID (dev-only)
 
-Skip the Azure portal entirely and use Microsoft's public Graph Explorer client ID:
+If Option A is blocked for you, Microsoft publishes several public client IDs (e.g. for Graph Explorer, Azure CLI) that support device-code flow against personal accounts. You can plug one into `AZURE_CLIENT_ID` to skip the Azure portal entirely.
 
-```
-AZURE_CLIENT_ID=REDACTED-PUBLIC-CLIENT-ID
-AZURE_TENANT=consumers
-```
-
-Caveats: the consent screen will say "Microsoft Graph Explorer" instead of your app's name; rate limits are shared with anyone else doing the same thing; Microsoft can revoke or restrict it. Fine for personal use, not appropriate for anything you'd ship.
+Caveats: the consent screen will show that tool's name instead of yours; rate limits are shared with everyone using the same client ID; Microsoft can revoke or restrict it at any time. Fine for personal experimentation; not appropriate for anything you'd ship or share.
 
 ## Setup
 
@@ -44,6 +39,7 @@ cp .env.example .env
 
 npm install
 npm run build
+npm test          # run unit tests (no live Graph calls)
 ```
 
 ## First run (device-code auth)
@@ -132,4 +128,10 @@ See [CLAUDE.md](./CLAUDE.md).
 
 ## License
 
-MIT
+AGPL-3.0-or-later. See [LICENSE](./LICENSE) for the full text.
+
+This is a copyleft license that closes the SaaS loophole: anyone running a modified version as a network service must release their modifications under the same terms. Suitable for personal projects that want to remain free as in freedom while preventing closed-source forks from being hosted as commercial products.
+
+## Acknowledgements
+
+Built with assistance from [Claude](https://www.anthropic.com/claude) (Anthropic). The architecture, design decisions, and final code review remain the responsibility of the human author; Claude served as a pair-programming and drafting collaborator.
