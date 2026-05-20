@@ -13,9 +13,12 @@ An MCP (Model Context Protocol) server, written in TypeScript, that exposes a si
 - `npm run dev` — `tsc --watch`
 - `npm run start` — run the compiled MCP server (`node dist/index.js`); only useful when launched by an MCP client over stdio
 - `npm run whoami` — auth smoke test: runs device-code flow if needed and prints `/me` from Graph. Use this first when debugging auth.
-- `npm run clean` — remove `dist/`
-
-There is no test runner wired up yet.
+- `npm run test` — Vitest unit + integration suite (Graph mocked, no network).
+- `npm run test:watch` — Vitest in watch mode.
+- `npm run test:coverage` — coverage with thresholds enforced.
+- `npm run lint` / `npm run lint:fix` — ESLint over `src/` and `test/`.
+- `npm run format` / `npm run format:check` — Prettier.
+- `npm run clean` — remove `dist/` and `coverage/`.
 
 ## Architecture
 
@@ -23,16 +26,18 @@ There is no test runner wired up yet.
 src/
   index.ts          entry — boots stdio MCP server
   server.ts         registers MCP tools (Zod schemas -> Graph wrapper)
-  auth.ts           MSAL PublicClientApplication + keychain-backed token cache
-  graph.ts          thin Microsoft Graph wrapper (mail ops only)
-  tools/            one module per tool group: read, mutate, send
+  auth.ts           MSAL PublicClientApplication + keyring-backed token cache
+  config.ts         loads .env and exposes scopes + keyring identifiers
+  graph.ts          thin Microsoft Graph wrapper
+  tools/            one module per tool group: read, mutate, send,
+                    attachments, calendar
   scripts/whoami.ts auth smoke test
 ```
 
 ### Critical invariants
 
 - **stdout is reserved for the MCP JSON-RPC stream.** Any logging — including the device-code prompt MSAL emits on first run — MUST go to stderr (`console.error`). A stray `console.log` will corrupt the protocol stream and the client will disconnect with cryptic errors.
-- **Token cache lives in the OS keyring** via [`@napi-rs/keyring`](https://github.com/Brooooooklyn/keyring-node) (`AsyncEntry`), service `personal-outlook-mcp`, account `msal-cache`. We implement MSAL's `ICachePlugin` to read/write the serialized cache. Do not write tokens to disk. macOS uses Keychain, Windows uses Credential Manager, Linux requires a Secret Service implementation (gnome-keyring or kwallet) at runtime — CI mocks the module so it doesn't need this.
+- **Token cache lives in the OS keyring** via [`@napi-rs/keyring`](https://github.com/Brooooooklyn/keyring-node) (`AsyncEntry`), service `personal-outlook-mcp`, account `msal-cache`. We implement MSAL's `ICachePlugin` to read/write the serialized cache. Do not write tokens to disk. The backing store depends on the OS: macOS Keychain, Windows Credential Manager, Linux Secret Service (gnome-keyring or kwallet — must be running at runtime). CI mocks `@napi-rs/keyring` so Linux runners don't need a backend.
 - **Auth flow is device code** (`acquireTokenByDeviceCode`), but **gated**. `getAccessToken({ interactive: true })` is the only path that triggers device-code; everything else (the MCP server, every tool call) passes `interactive: false` (the default) and gets `ReauthRequiredError` if silent refresh fails. This prevents the MCP server from hanging on a device-code prompt that Claude Desktop can't surface. Only `src/scripts/whoami.ts` runs in interactive mode; it's the user's escape hatch when scopes change or the cache is stale.
 - **Tenant is `consumers`** (personal accounts only). Switching to `common` admits work/school accounts and changes which scopes require admin consent.
 - **`/me.mail` is `null` for personal MSAs.** Use `userPrincipalName` if you need the email-shaped identifier of the signed-in user. Don't add code that depends on `/me.mail` being populated.

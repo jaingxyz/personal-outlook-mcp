@@ -81,7 +81,14 @@ export async function getAccessToken(
         scopes: config.scopes,
       });
       if (result?.accessToken) return result.accessToken;
+      // MSAL resolved but didn't hand back a usable token. Treat the same
+      // as a thrown failure: re-auth required on non-interactive paths so
+      // the MCP server doesn't fall through to device-code and hang.
+      if (!opts.interactive) {
+        throw new ReauthRequiredError("silent acquisition returned no token");
+      }
     } catch (err) {
+      if (err instanceof ReauthRequiredError) throw err;
       if (!opts.interactive) {
         throw new ReauthRequiredError(silentFailureReason(err));
       }
