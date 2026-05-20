@@ -1,0 +1,145 @@
+{
+  "manifest_version": "0.3",
+  "name": "personal-outlook-mcp",
+  "display_name": "Personal Outlook (Microsoft Graph)",
+  "version": "0.1.0",
+  "description": "Read and act on your personal Outlook inbox and calendar from Claude.",
+  "long_description": "Exposes a personal Outlook (consumer Microsoft account) inbox and calendar to MCP clients via Microsoft Graph. Uses MSAL device-code flow for OAuth and stores tokens in the OS keyring (macOS Keychain). You bring your own Azure AD app registration; tokens never leave your machine. **This .mcpb bundle is built for macOS arm64 only.** Other platforms should install via `npx -y @jaingxyz/personal-outlook-mcp` instead.",
+  "author": {
+    "name": "jaingxyz",
+    "url": "https://github.com/jaingxyz"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jaingxyz/personal-outlook-mcp.git"
+  },
+  "homepage": "https://github.com/jaingxyz/personal-outlook-mcp#readme",
+  "documentation": "https://github.com/jaingxyz/personal-outlook-mcp#readme",
+  "support": "https://github.com/jaingxyz/personal-outlook-mcp/security/advisories/new",
+  "license": "AGPL-3.0-or-later",
+  "keywords": ["outlook", "microsoft-graph", "email", "calendar", "mcp"],
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.js"],
+      "env": {
+        "AZURE_CLIENT_ID": "${user_config.azure_client_id}",
+        "AZURE_TENANT": "${user_config.azure_tenant}",
+        "PERSONAL_OUTLOOK_TZ": "${user_config.timezone}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "personal_email_list_folders",
+      "description": "List mail folders with id, display name, unread/total counts."
+    },
+    {
+      "name": "personal_email_list_recent",
+      "description": "Newest-first messages in a folder."
+    },
+    {
+      "name": "personal_email_search",
+      "description": "Free-text or KQL search across the mailbox."
+    },
+    {
+      "name": "personal_email_read",
+      "description": "Fetch one message with full body."
+    },
+    {
+      "name": "personal_email_mark_read",
+      "description": "Mark a message read or unread."
+    },
+    {
+      "name": "personal_email_move",
+      "description": "Move a message to another folder."
+    },
+    {
+      "name": "personal_email_delete",
+      "description": "Soft-delete or hard-delete a message."
+    },
+    {
+      "name": "personal_email_send",
+      "description": "Send a new email immediately."
+    },
+    {
+      "name": "personal_email_reply",
+      "description": "Reply to a message by id."
+    },
+    {
+      "name": "personal_email_create_draft",
+      "description": "Create a draft without sending."
+    },
+    {
+      "name": "personal_email_send_draft",
+      "description": "Send a previously created draft."
+    },
+    {
+      "name": "personal_email_list_attachments",
+      "description": "List attachments on a message."
+    },
+    {
+      "name": "personal_email_download_attachment",
+      "description": "Save a file attachment to disk."
+    },
+    {
+      "name": "personal_calendar_list_calendars",
+      "description": "List calendars."
+    },
+    {
+      "name": "personal_calendar_list_events",
+      "description": "Events in a date range, recurring series expanded."
+    },
+    {
+      "name": "personal_calendar_read_event",
+      "description": "Full event details."
+    },
+    {
+      "name": "personal_calendar_create_event",
+      "description": "Create a new event."
+    },
+    {
+      "name": "personal_calendar_update_event",
+      "description": "Update event subject/time/location/body/attendees."
+    },
+    {
+      "name": "personal_calendar_cancel_event",
+      "description": "Cancel or hard-delete an event."
+    },
+    {
+      "name": "personal_calendar_respond_to_invite",
+      "description": "Accept / tentatively / decline a meeting invite."
+    }
+  ],
+  "compatibility": {
+    "platforms": ["darwin"],
+    "runtimes": {
+      "node": ">=22.22.1"
+    }
+  },
+  "user_config": {
+    "azure_client_id": {
+      "type": "string",
+      "title": "Azure AD App (client) ID",
+      "description": "Application (client) ID from your own Azure AD app registration. See https://github.com/jaingxyz/personal-outlook-mcp#azure-setup for the 5-minute setup.",
+      "sensitive": false,
+      "required": true
+    },
+    "azure_tenant": {
+      "type": "string",
+      "title": "Azure tenant",
+      "description": "Tenant identifier. 'consumers' for personal Microsoft accounts, 'common' to also accept work/school, or a specific tenant GUID.",
+      "default": "consumers",
+      "required": false
+    },
+    "timezone": {
+      "type": "string",
+      "title": "Display timezone",
+      "description": "IANA timezone used to render calendar event times (e.g. America/Los_Angeles, America/New_York, Europe/London).",
+      "default": "America/Los_Angeles",
+      "required": false
+    }
+  }
+}
