@@ -10,6 +10,8 @@ async function main(): Promise<void> {
   await getAccessToken({ interactive: true });
 
   const me = await getMe();
+  // Intentionally writes to stdout: this is a CLI script, not the MCP server.
+  // eslint-disable-next-line no-console
   console.log(JSON.stringify(me, null, 2));
 }
 

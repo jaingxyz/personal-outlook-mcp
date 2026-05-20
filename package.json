@@ -15,7 +15,16 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "clean": "rm -rf dist"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky",
+    "clean": "rm -rf dist coverage"
+  },
+  "lint-staged": {
+    "*.{ts,js,json,md,yml,yaml}": "prettier --write",
+    "*.ts": "eslint --fix"
   },
   "engines": {
     "node": ">=20"
@@ -29,10 +38,18 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/isomorphic-fetch": "^0.0.39",
     "@types/node": "^22.9.0",
     "@vitest/coverage-v8": "^4.1.6",
+    "eslint": "^10.4.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.5",
+    "prettier": "^3.8.3",
     "typescript": "^5.6.3",
+    "typescript-eslint": "^8.59.4",
     "vitest": "^4.1.6"
   }
 }

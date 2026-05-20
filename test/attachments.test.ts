@@ -59,9 +59,7 @@ describe("attachment tools", () => {
   });
 
   it("downloadAttachment writes the decoded file to disk and returns metadata", async () => {
-    const { downloadAttachment } = await import(
-      "../src/tools/attachments.js"
-    );
+    const { downloadAttachment } = await import("../src/tools/attachments.js");
     const content = Buffer.from("hello world");
     mock.responses.push({
       method: "get",
@@ -88,9 +86,7 @@ describe("attachment tools", () => {
   });
 
   it("downloadAttachment rejects non-fileAttachment types", async () => {
-    const { downloadAttachment } = await import(
-      "../src/tools/attachments.js"
-    );
+    const { downloadAttachment } = await import("../src/tools/attachments.js");
     mock.responses.push({
       method: "get",
       value: {
@@ -108,9 +104,7 @@ describe("attachment tools", () => {
   });
 
   it("downloadAttachment honors filename override and sanitizes it", async () => {
-    const { downloadAttachment } = await import(
-      "../src/tools/attachments.js"
-    );
+    const { downloadAttachment } = await import("../src/tools/attachments.js");
     mock.responses.push({
       method: "get",
       value: {

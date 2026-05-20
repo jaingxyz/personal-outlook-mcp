@@ -63,6 +63,7 @@ The MCP server is launched by Claude Desktop via `claude_desktop_config.json` wi
 ## Configuration
 
 `.env` (gitignored) supplies:
+
 - `AZURE_CLIENT_ID` — Application (client) ID from the Azure AD app registration
 - `AZURE_TENANT` — defaults to `consumers`; change only with intent
 

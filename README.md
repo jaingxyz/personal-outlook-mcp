@@ -1,5 +1,9 @@
 # personal-outlook-mcp
 
+[![CI](https://github.com/jaingxyz/personal-outlook-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/jaingxyz/personal-outlook-mcp/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/jaingxyz/personal-outlook-mcp/actions/workflows/codeql.yml/badge.svg)](https://github.com/jaingxyz/personal-outlook-mcp/actions/workflows/codeql.yml)
+[![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](./LICENSE)
+
 A [Model Context Protocol](https://modelcontextprotocol.io/) server that exposes a personal Outlook (consumer Microsoft account) inbox to MCP clients like Claude Desktop. Talks to Microsoft Graph over HTTPS, uses MSAL device-code flow for OAuth, and stores tokens in the macOS Keychain.
 
 ## Prerequisites
@@ -88,28 +92,28 @@ Substitute the absolute path to `dist/index.js` and your client ID. Restart Clau
 
 ## Tools
 
-| Tool | Purpose |
-|---|---|
-| `personal_email_list_folders` | List mail folders with id, display name, unread/total counts. |
-| `personal_email_list_recent` | Newest-first messages in a folder. Supports `unreadOnly`. |
-| `personal_email_search` | Free-text or KQL search across the mailbox. Ranked by relevance. |
-| `personal_email_read` | Fetch one message with full body (text or html). |
-| `personal_email_mark_read` | Mark a message read or unread. |
-| `personal_email_move` | Move a message to another folder (id or well-known name). |
-| `personal_email_delete` | Soft-delete (move to Deleted Items) by default; `hardDelete=true` is unrecoverable. |
-| `personal_email_send` | Send a new email immediately. Saves a copy to Sent Items. |
-| `personal_email_reply` | Reply to a message by id. `replyAll=true` to reply to all recipients. |
-| `personal_email_create_draft` | Create a draft in Drafts without sending. Returns a draftId. |
-| `personal_email_send_draft` | Send a previously created draft by id. |
-| `personal_email_list_attachments` | List attachments on a message (id, name, contentType, size). |
-| `personal_email_download_attachment` | Save a file attachment to disk. Defaults to `~/Downloads/personal-outlook-mcp/`. |
-| `personal_calendar_list_calendars` | List calendars (primary, holidays, custom group calendars). |
-| `personal_calendar_list_events` | Events in a date range (calendarView; recurring series expanded into occurrences). |
-| `personal_calendar_read_event` | Full event details: attendees, body, recurrence pattern. |
-| `personal_calendar_create_event` | Create an event. If attendees are listed, Graph sends invites. |
-| `personal_calendar_update_event` | Update subject/time/location/body/attendees. Refuses single occurrences of recurring series. |
-| `personal_calendar_cancel_event` | Cancel (sends notice) or hard-delete (no notice). |
-| `personal_calendar_respond_to_invite` | accept / tentativelyAccept / decline an invite. |
+| Tool                                  | Purpose                                                                                      |
+| ------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `personal_email_list_folders`         | List mail folders with id, display name, unread/total counts.                                |
+| `personal_email_list_recent`          | Newest-first messages in a folder. Supports `unreadOnly`.                                    |
+| `personal_email_search`               | Free-text or KQL search across the mailbox. Ranked by relevance.                             |
+| `personal_email_read`                 | Fetch one message with full body (text or html).                                             |
+| `personal_email_mark_read`            | Mark a message read or unread.                                                               |
+| `personal_email_move`                 | Move a message to another folder (id or well-known name).                                    |
+| `personal_email_delete`               | Soft-delete (move to Deleted Items) by default; `hardDelete=true` is unrecoverable.          |
+| `personal_email_send`                 | Send a new email immediately. Saves a copy to Sent Items.                                    |
+| `personal_email_reply`                | Reply to a message by id. `replyAll=true` to reply to all recipients.                        |
+| `personal_email_create_draft`         | Create a draft in Drafts without sending. Returns a draftId.                                 |
+| `personal_email_send_draft`           | Send a previously created draft by id.                                                       |
+| `personal_email_list_attachments`     | List attachments on a message (id, name, contentType, size).                                 |
+| `personal_email_download_attachment`  | Save a file attachment to disk. Defaults to `~/Downloads/personal-outlook-mcp/`.             |
+| `personal_calendar_list_calendars`    | List calendars (primary, holidays, custom group calendars).                                  |
+| `personal_calendar_list_events`       | Events in a date range (calendarView; recurring series expanded into occurrences).           |
+| `personal_calendar_read_event`        | Full event details: attendees, body, recurrence pattern.                                     |
+| `personal_calendar_create_event`      | Create an event. If attendees are listed, Graph sends invites.                               |
+| `personal_calendar_update_event`      | Update subject/time/location/body/attendees. Refuses single occurrences of recurring series. |
+| `personal_calendar_cancel_event`      | Cancel (sends notice) or hard-delete (no notice).                                            |
+| `personal_calendar_respond_to_invite` | accept / tentativelyAccept / decline an invite.                                              |
 
 Folder names accept Outlook well-known names: `inbox`, `sentitems`, `drafts`, `deleteditems`, `archive`, `junkemail`. Custom folders need their id (get it from `personal_email_list_folders`).
 

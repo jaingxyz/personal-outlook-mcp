@@ -5,7 +5,10 @@ import { graph } from "../graph.js";
 
 export const markReadSchema = z.object({
   messageId: z.string().min(1),
-  isRead: z.boolean().default(true).describe("true to mark read, false to mark unread"),
+  isRead: z
+    .boolean()
+    .default(true)
+    .describe("true to mark read, false to mark unread"),
 });
 
 export type MarkReadInput = z.infer<typeof markReadSchema>;

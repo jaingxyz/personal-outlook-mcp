@@ -31,13 +31,13 @@ export const listFoldersSchema = z.object({});
 
 export type ListFoldersInput = z.infer<typeof listFoldersSchema>;
 
-export async function listFolders(
-  _input: ListFoldersInput,
-): Promise<unknown> {
+export async function listFolders(_input: ListFoldersInput): Promise<unknown> {
   const res = await graph
     .api("/me/mailFolders")
     .top(100)
-    .select("id,displayName,parentFolderId,unreadItemCount,totalItemCount,childFolderCount")
+    .select(
+      "id,displayName,parentFolderId,unreadItemCount,totalItemCount,childFolderCount",
+    )
     .get();
 
   return {
