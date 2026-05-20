@@ -27,7 +27,7 @@
     "*.ts": "eslint --fix"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.22.1"
   },
   "dependencies": {
     "@azure/msal-node": "^2.16.2",
