@@ -30,7 +30,7 @@
     "node": ">=22.22.1"
   },
   "dependencies": {
-    "@azure/msal-node": "^2.16.2",
+    "@azure/msal-node": "^5.2.2",
     "@microsoft/microsoft-graph-client": "^3.0.7",
     "@modelcontextprotocol/sdk": "^1.0.4",
     "isomorphic-fetch": "^3.0.0",
