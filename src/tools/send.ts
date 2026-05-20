@@ -13,9 +13,13 @@ const optionalRecipientList = z.array(z.string().email()).default([]);
 const bodyFormat = z
   .enum(["text", "html"])
   .default("text")
-  .describe("Body content type. 'text' is plain text; 'html' is rendered HTML.");
+  .describe(
+    "Body content type. 'text' is plain text; 'html' is rendered HTML.",
+  );
 
-function toRecipients(addrs: string[]): { emailAddress: { address: string } }[] {
+function toRecipients(
+  addrs: string[],
+): { emailAddress: { address: string } }[] {
   return addrs.map((address) => ({ emailAddress: { address } }));
 }
 
@@ -54,7 +58,10 @@ export async function send(input: SendInput): Promise<unknown> {
 
 export const replySchema = z.object({
   messageId: z.string().min(1),
-  body: z.string().min(1).describe("Reply body. Prepended to the original quoted thread by Graph."),
+  body: z
+    .string()
+    .min(1)
+    .describe("Reply body. Prepended to the original quoted thread by Graph."),
   bodyFormat,
   replyAll: z
     .boolean()
@@ -115,12 +122,16 @@ export const sendDraftSchema = z.object({
   draftId: z
     .string()
     .min(1)
-    .describe("Id of an existing draft (returned by personal_email_create_draft)."),
+    .describe(
+      "Id of an existing draft (returned by personal_email_create_draft).",
+    ),
 });
 
 export type SendDraftInput = z.infer<typeof sendDraftSchema>;
 
 export async function sendDraft(input: SendDraftInput): Promise<unknown> {
-  await graph.api(`/me/messages/${encodeURIComponent(input.draftId)}/send`).post({});
+  await graph
+    .api(`/me/messages/${encodeURIComponent(input.draftId)}/send`)
+    .post({});
   return { ok: true, draftId: input.draftId };
 }

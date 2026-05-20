@@ -17,8 +17,6 @@ const dateTimeWithTz = z.object({
     .describe("IANA timezone, e.g. 'America/Los_Angeles' or 'UTC'."),
 });
 
-type DateTimeWithTz = z.infer<typeof dateTimeWithTz>;
-
 const attendeeSchema = z.object({
   email: z.string().email(),
   name: z.string().optional(),
@@ -73,20 +71,26 @@ export function summarizeEvent(
     isAllDay: e.isAllDay,
     location: (e.location as Record<string, unknown> | undefined)?.displayName,
     organizer: formatEmail(
-      (e.organizer as { emailAddress?: { name?: string; address?: string } } | undefined)?.emailAddress,
+      (
+        e.organizer as
+          | { emailAddress?: { name?: string; address?: string } }
+          | undefined
+      )?.emailAddress,
     ),
     attendees: ((e.attendees as Array<Record<string, unknown>>) ?? []).map(
       (a) => ({
         email: formatEmail(
-          (a.emailAddress as { name?: string; address?: string } | undefined),
+          a.emailAddress as { name?: string; address?: string } | undefined,
         ),
         type: a.type,
-        responseStatus: (a.status as { response?: string } | undefined)?.response,
+        responseStatus: (a.status as { response?: string } | undefined)
+          ?.response,
       }),
     ),
     isCancelled: e.isCancelled,
     showAs: e.showAs,
-    myResponse: (e.responseStatus as { response?: string } | undefined)?.response,
+    myResponse: (e.responseStatus as { response?: string } | undefined)
+      ?.response,
     type: e.type,
     seriesMasterId: e.seriesMasterId,
     webLink: e.webLink,
@@ -122,7 +126,7 @@ export async function listCalendars(
       isDefault: c.isDefaultCalendar,
       canEdit: c.canEdit,
       owner: formatEmail(
-        (c.owner as { name?: string; address?: string } | undefined),
+        c.owner as { name?: string; address?: string } | undefined,
       ),
     })),
   };
@@ -186,7 +190,8 @@ export async function readEvent(input: ReadEventInput): Promise<unknown> {
   return {
     ...summarizeEvent(e),
     body: {
-      contentType: (e.body as { contentType?: string } | undefined)?.contentType,
+      contentType: (e.body as { contentType?: string } | undefined)
+        ?.contentType,
       content: (e.body as { content?: string } | undefined)?.content,
     },
     recurrence: e.recurrence ?? null,
@@ -330,9 +335,7 @@ export type CancelEventInput = z.infer<typeof cancelEventSchema>;
 
 export async function cancelEvent(input: CancelEventInput): Promise<unknown> {
   if (input.hardDelete) {
-    await graph
-      .api(`/me/events/${encodeURIComponent(input.eventId)}`)
-      .delete();
+    await graph.api(`/me/events/${encodeURIComponent(input.eventId)}`).delete();
     return { ok: true, eventId: input.eventId, mode: "hardDelete" };
   }
 

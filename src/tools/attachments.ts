@@ -6,7 +6,11 @@ import { resolve, join } from "node:path";
 import { homedir } from "node:os";
 import { graph } from "../graph.js";
 
-const DEFAULT_DOWNLOAD_DIR = join(homedir(), "Downloads", "personal-outlook-mcp");
+const DEFAULT_DOWNLOAD_DIR = join(
+  homedir(),
+  "Downloads",
+  "personal-outlook-mcp",
+);
 
 export const listAttachmentsSchema = z.object({
   messageId: z.string().min(1),
@@ -76,7 +80,9 @@ export async function downloadAttachment(
   }
 
   const buffer = Buffer.from(contentBytes, "base64");
-  const safeName = sanitizeFilename(input.filename ?? (att.name as string) ?? "attachment");
+  const safeName = sanitizeFilename(
+    input.filename ?? (att.name as string) ?? "attachment",
+  );
   const dir = expandHome(input.destDir ?? DEFAULT_DOWNLOAD_DIR);
   await mkdir(dir, { recursive: true });
   const fullPath = resolve(dir, safeName);
@@ -92,7 +98,9 @@ export async function downloadAttachment(
 }
 
 export function sanitizeFilename(name: string): string {
-  // Strip path separators and control chars; collapse weird whitespace.
+  // Strip path separators and control chars; the control-char range is the
+  // point of this regex.
+  // eslint-disable-next-line no-control-regex
   return name.replace(/[/\\\x00-\x1f]+/g, "_").trim() || "attachment";
 }
 

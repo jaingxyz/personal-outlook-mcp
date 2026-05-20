@@ -50,9 +50,8 @@ beforeEach(() => {
 
 describe("getAccessToken", () => {
   it("throws ReauthRequiredError when no account is cached and interactive=false", async () => {
-    const { getAccessToken, ReauthRequiredError } = await import(
-      "../src/auth.js"
-    );
+    const { getAccessToken, ReauthRequiredError } =
+      await import("../src/auth.js");
     tokenCacheState.accounts = [];
     await expect(getAccessToken({ interactive: false })).rejects.toBeInstanceOf(
       ReauthRequiredError,
@@ -60,9 +59,8 @@ describe("getAccessToken", () => {
   });
 
   it("throws ReauthRequiredError when silent acquisition fails and interactive=false", async () => {
-    const { getAccessToken, ReauthRequiredError } = await import(
-      "../src/auth.js"
-    );
+    const { getAccessToken, ReauthRequiredError } =
+      await import("../src/auth.js");
     tokenCacheState.accounts = [{ homeAccountId: "x" }];
     tokenCacheState.acquireTokenSilentImpl.mockRejectedValue(
       Object.assign(new Error("invalid_grant"), { errorCode: "invalid_grant" }),
@@ -71,9 +69,7 @@ describe("getAccessToken", () => {
       ReauthRequiredError,
     );
     // Crucially: do not fall back to device code from non-interactive path.
-    expect(
-      tokenCacheState.acquireTokenByDeviceCodeImpl,
-    ).not.toHaveBeenCalled();
+    expect(tokenCacheState.acquireTokenByDeviceCodeImpl).not.toHaveBeenCalled();
   });
 
   it("falls back to device code when silent fails AND interactive=true", async () => {
@@ -96,15 +92,12 @@ describe("getAccessToken", () => {
       accessToken: "silent-token",
     });
     expect(await getAccessToken({ interactive: false })).toBe("silent-token");
-    expect(
-      tokenCacheState.acquireTokenByDeviceCodeImpl,
-    ).not.toHaveBeenCalled();
+    expect(tokenCacheState.acquireTokenByDeviceCodeImpl).not.toHaveBeenCalled();
   });
 
   it("ReauthRequiredError message points the user at npm run whoami", async () => {
-    const { getAccessToken, ReauthRequiredError } = await import(
-      "../src/auth.js"
-    );
+    const { getAccessToken, ReauthRequiredError } =
+      await import("../src/auth.js");
     tokenCacheState.accounts = [];
     try {
       await getAccessToken({ interactive: false });

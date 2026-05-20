@@ -94,9 +94,9 @@ function popResponse(
   const idx = responses.findIndex((r) => r.method === method);
   if (idx === -1) {
     throw new Error(
-      `mock: no response queued for ${method.toUpperCase()} (next queued: ${responses
-        .map((r) => r.method)
-        .join(",") || "none"})`,
+      `mock: no response queued for ${method.toUpperCase()} (next queued: ${
+        responses.map((r) => r.method).join(",") || "none"
+      })`,
     );
   }
   return responses.splice(idx, 1)[0].value;

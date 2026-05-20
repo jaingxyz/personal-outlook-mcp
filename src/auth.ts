@@ -113,7 +113,11 @@ export async function getAccessToken(
 
 function silentFailureReason(err: unknown): string {
   if (err && typeof err === "object") {
-    const e = err as { errorCode?: string; errorMessage?: string; message?: string };
+    const e = err as {
+      errorCode?: string;
+      errorMessage?: string;
+      message?: string;
+    };
     if (e.errorCode === "invalid_grant") {
       return "scopes changed or refresh token revoked";
     }

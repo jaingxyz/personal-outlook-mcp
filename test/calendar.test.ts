@@ -60,7 +60,10 @@ describe("calendar tools", () => {
     });
     await createEvent({
       subject: "test",
-      start: { dateTime: "2026-05-20T10:00:00", timeZone: "America/Los_Angeles" },
+      start: {
+        dateTime: "2026-05-20T10:00:00",
+        timeZone: "America/Los_Angeles",
+      },
       end: { dateTime: "2026-05-20T10:15:00", timeZone: "America/Los_Angeles" },
       attendees: [],
       bodyFormat: "text",
