@@ -230,7 +230,10 @@ export async function createEvent(input: CreateEventInput): Promise<unknown> {
     payload.body = { contentType: input.bodyFormat, content: input.body };
   }
 
-  const created = await graph.api(path).post(payload);
+  const created = await graph
+    .api(path)
+    .header("Prefer", preferTzHeader())
+    .post(payload);
   return summarizeEvent(created);
 }
 
@@ -281,9 +284,17 @@ export async function updateEvent(input: UpdateEventInput): Promise<unknown> {
     return { ok: true, eventId: input.eventId, changed: [] };
   }
 
-  const updated = await graph
+  await graph
     .api(`/me/events/${encodeURIComponent(input.eventId)}`)
     .patch(patch);
+
+  // Graph ignores Prefer: outlook.timezone on PATCH responses for events on
+  // personal MSAs, so re-GET to render times in the configured zone.
+  const updated = await graph
+    .api(`/me/events/${encodeURIComponent(input.eventId)}`)
+    .header("Prefer", preferTzHeader())
+    .select(eventSelect)
+    .get();
 
   return {
     ok: true,
