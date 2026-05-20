@@ -12,6 +12,9 @@
     "dev": "tsc --watch",
     "start": "node dist/index.js",
     "whoami": "node dist/scripts/whoami.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "clean": "rm -rf dist"
   },
   "engines": {
@@ -28,6 +31,8 @@
   "devDependencies": {
     "@types/isomorphic-fetch": "^0.0.39",
     "@types/node": "^22.9.0",
-    "typescript": "^5.6.3"
+    "@vitest/coverage-v8": "^4.1.6",
+    "typescript": "^5.6.3",
+    "vitest": "^4.1.6"
   }
 }

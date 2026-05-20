@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 jaingxyz
 import { z } from "zod";
 import { graph } from "../graph.js";
 import { config } from "../config.js";
@@ -60,7 +62,9 @@ const eventSelect = [
   "recurrence",
 ].join(",");
 
-function summarizeEvent(e: Record<string, unknown>): Record<string, unknown> {
+export function summarizeEvent(
+  e: Record<string, unknown>,
+): Record<string, unknown> {
   return {
     id: e.id,
     subject: e.subject,
@@ -90,7 +94,7 @@ function summarizeEvent(e: Record<string, unknown>): Record<string, unknown> {
   };
 }
 
-function formatEmail(
+export function formatEmail(
   ea: { name?: string; address?: string } | undefined | null,
 ): string | null {
   if (!ea) return null;

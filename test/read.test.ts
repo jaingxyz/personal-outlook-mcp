@@ -1,0 +1,106 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 jaingxyz
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { makeMockGraph } from "./_mockGraph.js";
+
+const mock = makeMockGraph();
+
+vi.mock("../src/graph.js", () => ({
+  graph: { api: mock.api },
+  getMe: vi.fn(),
+}));
+
+beforeEach(() => {
+  mock.calls.length = 0;
+  mock.responses.length = 0;
+  mock.api.mockClear();
+});
+
+describe("read tools", () => {
+  it("listFolders maps Graph response into a flat shape", async () => {
+    const { listFolders } = await import("../src/tools/read.js");
+    mock.responses.push({
+      method: "get",
+      value: {
+        value: [
+          {
+            id: "f1",
+            displayName: "Inbox",
+            parentFolderId: "root",
+            unreadItemCount: 5,
+            totalItemCount: 100,
+            childFolderCount: 1,
+          },
+        ],
+      },
+    });
+    const out = (await listFolders({})) as { folders: unknown[] };
+    expect(out.folders).toEqual([
+      {
+        id: "f1",
+        name: "Inbox",
+        parentFolderId: "root",
+        unread: 5,
+        total: 100,
+        hasChildren: true,
+      },
+    ]);
+    expect(mock.calls[0].path).toBe("/me/mailFolders");
+  });
+
+  it("listRecent applies orderby and unreadOnly filter", async () => {
+    const { listRecent } = await import("../src/tools/read.js");
+    mock.responses.push({ method: "get", value: { value: [] } });
+    await listRecent({ folder: "inbox", limit: 5, unreadOnly: true });
+    const c = mock.calls[0];
+    expect(c.path).toBe("/me/mailFolders/inbox/messages");
+    expect(c.orderby).toBe("receivedDateTime DESC");
+    expect(c.filter).toBe("isRead eq false");
+    expect(c.top).toBe(5);
+  });
+
+  it("listRecent skips filter when unreadOnly is false", async () => {
+    const { listRecent } = await import("../src/tools/read.js");
+    mock.responses.push({ method: "get", value: { value: [] } });
+    await listRecent({ folder: "inbox", limit: 25, unreadOnly: false });
+    expect(mock.calls[0].filter).toBeUndefined();
+  });
+
+  it("search uses $search and escapes embedded quotes", async () => {
+    const { search } = await import("../src/tools/read.js");
+    mock.responses.push({ method: "get", value: { value: [] } });
+    await search({ query: 'a "b" c', limit: 10 });
+    const c = mock.calls[0];
+    expect(c.path).toBe("/me/messages");
+    expect(c.search).toBe('"a \\"b\\" c"');
+    // Graph forbids combining $search with $orderby — make sure we don't add one.
+    expect(c.orderby).toBeUndefined();
+  });
+
+  it("read returns full message with formatted recipients and body", async () => {
+    const { read } = await import("../src/tools/read.js");
+    mock.responses.push({
+      method: "get",
+      value: {
+        id: "m1",
+        subject: "hi",
+        from: { emailAddress: { name: "A", address: "a@x.com" } },
+        toRecipients: [{ emailAddress: { name: "B", address: "b@x.com" } }],
+        ccRecipients: [],
+        replyTo: [],
+        receivedDateTime: "2026-05-20T00:00:00Z",
+        body: { contentType: "text", content: "hello" },
+      },
+    });
+    const out = (await read({ messageId: "m1", bodyFormat: "text" })) as Record<
+      string,
+      unknown
+    >;
+    expect(out.from).toBe("A <a@x.com>");
+    expect(out.to).toEqual(["B <b@x.com>"]);
+    expect((out.body as { content: string }).content).toBe("hello");
+    expect(mock.calls[0].headers["Prefer"]).toBe(
+      'outlook.body-content-type="text"',
+    );
+  });
+});

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 jaingxyz
 import { z } from "zod";
 import { graph } from "../graph.js";
 
@@ -156,7 +158,9 @@ type RecipientShape = {
   emailAddress?: { name?: string; address?: string };
 };
 
-function formatRecipient(r: RecipientShape | undefined | null): string | null {
+export function formatRecipient(
+  r: RecipientShape | undefined | null,
+): string | null {
   const ea = r?.emailAddress;
   if (!ea) return null;
   if (ea.name && ea.address) return `${ea.name} <${ea.address}>`;
