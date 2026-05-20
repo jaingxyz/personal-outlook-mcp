@@ -74,6 +74,20 @@ describe("getAccessToken", () => {
     expect(tokenCacheState.acquireTokenByDeviceCodeImpl).not.toHaveBeenCalled();
   });
 
+  it("throws ReauthRequiredError when silent acquisition resolves with no token and interactive=false", async () => {
+    // Regression: previously a falsy resolve fell through to device-code
+    // flow even on the non-interactive path, which would hang the MCP
+    // server under Claude Desktop.
+    const { getAccessToken, ReauthRequiredError } =
+      await import("../src/auth.js");
+    tokenCacheState.accounts = [{ homeAccountId: "x" }];
+    tokenCacheState.acquireTokenSilentImpl.mockResolvedValue(null);
+    await expect(getAccessToken({ interactive: false })).rejects.toBeInstanceOf(
+      ReauthRequiredError,
+    );
+    expect(tokenCacheState.acquireTokenByDeviceCodeImpl).not.toHaveBeenCalled();
+  });
+
   it("falls back to device code when silent fails AND interactive=true", async () => {
     const { getAccessToken } = await import("../src/auth.js");
     tokenCacheState.accounts = [{ homeAccountId: "x" }];
