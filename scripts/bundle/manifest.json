@@ -2,9 +2,9 @@
   "manifest_version": "0.3",
   "name": "personal-outlook-mcp",
   "display_name": "Personal Outlook (Microsoft Graph)",
-  "version": "0.1.0",
-  "description": "Read and act on your personal Outlook inbox and calendar from Claude.",
-  "long_description": "Exposes a personal Outlook (consumer Microsoft account) inbox and calendar to MCP clients via Microsoft Graph. Uses MSAL device-code flow for OAuth and stores tokens in the OS keyring (macOS Keychain). You bring your own Azure AD app registration; tokens never leave your machine. **This .mcpb bundle is built for macOS arm64 only.** Other platforms should install via `npx -y @jaingxyz/personal-outlook-mcp` instead.",
+  "version": "0.1.1",
+  "description": "Read and act on your personal Outlook inbox and calendar from Claude. Each user runs the server locally with their own Azure AD app registration; tokens never leave the machine.",
+  "long_description": "**Personal Outlook MCP** exposes a personal Outlook (consumer Microsoft account) inbox and calendar to MCP clients like Claude Desktop via the Microsoft Graph API.\n\n## What you get\n\n**Email tools** (`personal_email_*`):\n- List folders, list recent messages (with unread filter), full-text/KQL search\n- Read full messages with body in text or HTML\n- Mark read/unread, move between folders, soft-delete or hard-delete\n- Send new mail, reply (with optional reply-all), create drafts, send drafts later\n- List and download attachments to disk\n\n**Calendar tools** (`personal_calendar_*`):\n- List calendars (primary, holidays, custom group calendars)\n- List events in a date range with recurring series expanded to occurrences\n- Read full event details including attendees, body, recurrence pattern\n- Create / update / cancel events\n- Respond to meeting invites (accept / tentatively / decline)\n\n## How it works\n\n- **Local stdio only** — no hosted backend, no proxy. Your tokens stay in the OS keyring.\n- **MSAL device-code OAuth** — first run prompts you in a terminal to sign in via browser; subsequent runs refresh silently.\n- **Bring your own Azure AD app** — register a free app in the Azure portal (~5 minutes); the MCP server uses your client ID. Step-by-step guide in the repo README.\n- **Scopes**: `Mail.ReadWrite`, `Mail.Send`, `Calendars.ReadWrite`, `User.Read`, `offline_access`.\n\n## Distribution note\n\nThis `.mcpb` bundle is built for **macOS arm64** only because the OS-keyring native binary is platform-specific. Users on other platforms (Intel Mac, Windows, Linux) should install via `npx -y @jaingxyz/personal-outlook-mcp`, which fetches the right native binary at install time. See the [README](https://github.com/jaingxyz/personal-outlook-mcp#readme) for full setup.",
   "author": {
     "name": "jaingxyz",
     "url": "https://github.com/jaingxyz"
@@ -18,6 +18,7 @@
   "support": "https://github.com/jaingxyz/personal-outlook-mcp/security/advisories/new",
   "license": "AGPL-3.0-or-later",
   "keywords": ["outlook", "microsoft-graph", "email", "calendar", "mcp"],
+  "icon": "icon.png",
   "server": {
     "type": "node",
     "entry_point": "server/index.js",
