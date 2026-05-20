@@ -33,6 +33,22 @@ import {
   listAttachments,
   listAttachmentsSchema,
 } from "./tools/attachments.js";
+import {
+  cancelEvent,
+  cancelEventSchema,
+  createEvent,
+  createEventSchema,
+  listCalendars,
+  listCalendarsSchema,
+  listEvents,
+  listEventsSchema,
+  readEvent,
+  readEventSchema,
+  respondSchema,
+  respondToInvite,
+  updateEvent,
+  updateEventSchema,
+} from "./tools/calendar.js";
 
 export function buildServer(): McpServer {
   const server = new McpServer({
@@ -173,6 +189,80 @@ export function buildServer(): McpServer {
       inputSchema: downloadAttachmentSchema.shape,
     },
     async (args) => toolResult(await downloadAttachment(args)),
+  );
+
+  server.registerTool(
+    "personal_calendar_list_calendars",
+    {
+      description:
+        "List the user's calendars (primary, birthdays, holidays, custom). Returns id, name, isDefault, canEdit.",
+      inputSchema: listCalendarsSchema.shape,
+    },
+    async (args) => toolResult(await listCalendars(args)),
+  );
+
+  server.registerTool(
+    "personal_calendar_list_events",
+    {
+      description:
+        "List events in a date range using calendarView (recurring series are expanded into individual occurrences). Provide ISO datetimes for start and end. Defaults to the primary calendar.",
+      inputSchema: listEventsSchema.shape,
+    },
+    async (args) => toolResult(await listEvents(args)),
+  );
+
+  server.registerTool(
+    "personal_calendar_read_event",
+    {
+      description:
+        "Read full details of a single event including body and recurrence pattern.",
+      inputSchema: readEventSchema.shape,
+    },
+    async (args) => toolResult(await readEvent(args)),
+  );
+
+  server.registerTool(
+    "personal_calendar_create_event",
+    {
+      description:
+        "Create a new event. Times use {dateTime, timeZone} where dateTime is local-form (no offset) and timeZone is an IANA name. If attendees are provided, Graph sends invites automatically.",
+      inputSchema: createEventSchema.shape,
+      annotations: { destructiveHint: true },
+    },
+    async (args) => toolResult(await createEvent(args)),
+  );
+
+  server.registerTool(
+    "personal_calendar_update_event",
+    {
+      description:
+        "Update an event's subject, time, location, body, or attendees. Errors if eventId refers to a single occurrence/exception of a recurring series — edit the series master or cancel+recreate instead.",
+      inputSchema: updateEventSchema.shape,
+      annotations: { destructiveHint: true },
+    },
+    async (args) => toolResult(await updateEvent(args)),
+  );
+
+  server.registerTool(
+    "personal_calendar_cancel_event",
+    {
+      description:
+        "Cancel an event. Default mode sends a cancellation notice to attendees (use this for meetings). hardDelete=true skips the notice and just deletes — appropriate for events with no attendees.",
+      inputSchema: cancelEventSchema.shape,
+      annotations: { destructiveHint: true },
+    },
+    async (args) => toolResult(await cancelEvent(args)),
+  );
+
+  server.registerTool(
+    "personal_calendar_respond_to_invite",
+    {
+      description:
+        "Respond to a meeting invite as accept, tentativelyAccept, or decline. Optionally include a comment and choose whether to send a response email to the organizer.",
+      inputSchema: respondSchema.shape,
+      annotations: { destructiveHint: true },
+    },
+    async (args) => toolResult(await respondToInvite(args)),
   );
 
   return server;

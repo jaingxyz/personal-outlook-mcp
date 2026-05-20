@@ -39,11 +39,15 @@ src/
 
 ### Graph specifics worth remembering
 
-- Required delegated scopes: `Mail.ReadWrite`, `Mail.Send`, `offline_access`, `User.Read`. `offline_access` is what gives us a refresh token — without it, the user re-auths every hour.
+- Required delegated scopes: `Mail.ReadWrite`, `Mail.Send`, `Calendars.ReadWrite`, `offline_access`, `User.Read`. `offline_access` is what gives us a refresh token — without it, the user re-auths every hour. Adding a new scope invalidates the cached refresh token; users have to redo device-code consent (run `npm run whoami` to seed the new scope).
 - Search uses Graph's `$search` query parameter (KQL-style). When `$search` is present, Graph forbids `$orderby` — code paths that combine them must branch.
 - Folder operations accept either a folder id or a well-known name (`inbox`, `sentitems`, `drafts`, `deleteditems`, `archive`, `junkemail`).
 - Delete-by-default semantics: our `delete` tool moves to `deleteditems` rather than hard-deleting, to match Outlook's UI behavior. Hard delete is a separate flag.
 - `POST /me/messages/{id}/move` returns the message with its **new id** in the destination folder. The pre-move id no longer resolves. Tools that move a message return both for caller convenience.
+- Calendar event times use `{ dateTime, timeZone }` where `dateTime` is **local form, no offset** and `timeZone` is an IANA name. Don't try to combine them into an ISO offset string before sending — Graph rejects offset strings in this shape.
+- `calendarView` (start/end query params) expands recurring series into individual occurrences. `/me/events` returns the series master + standalone events; use `calendarView` for "what's on my calendar this week" questions.
+- Updating a single occurrence of a recurring series via `PATCH /me/events/{id}` is a known Graph footgun. We refuse it explicitly: `update_event` checks `type === "occurrence" | "exception"` and errors. Series-master edits are fine.
+- `Prefer: outlook.timezone="..."` header makes Graph render output times in that zone. Apply it to GET endpoints that read events. Set zone via `PERSONAL_OUTLOOK_TZ` env var; defaults to `America/Los_Angeles`.
 
 ### Tool naming
 

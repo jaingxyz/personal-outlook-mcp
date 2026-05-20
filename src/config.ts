@@ -48,9 +48,11 @@ export const config = {
   scopes: [
     "Mail.ReadWrite",
     "Mail.Send",
+    "Calendars.ReadWrite",
     "User.Read",
     "offline_access",
   ],
+  defaultTimeZone: process.env.PERSONAL_OUTLOOK_TZ || "America/Los_Angeles",
   keychainService: "personal-outlook-mcp",
   keychainAccount: "msal-cache",
 };
