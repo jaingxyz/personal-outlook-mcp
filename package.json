@@ -35,7 +35,7 @@
     "@modelcontextprotocol/sdk": "^1.0.4",
     "isomorphic-fetch": "^3.0.0",
     "keytar": "^7.9.0",
-    "zod": "^3.23.8"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
