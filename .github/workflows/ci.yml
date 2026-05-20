@@ -25,6 +25,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install system dependencies (keytar needs libsecret on Linux)
+        run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev
+
       - name: Setup Node ${{ matrix.node }}
         uses: actions/setup-node@v4
         with:
