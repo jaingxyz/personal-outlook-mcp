@@ -4,13 +4,16 @@
 [![Semgrep](https://github.com/jaingxyz/personal-outlook-mcp/actions/workflows/semgrep.yml/badge.svg)](https://github.com/jaingxyz/personal-outlook-mcp/actions/workflows/semgrep.yml)
 [![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](./LICENSE)
 
-A [Model Context Protocol](https://modelcontextprotocol.io/) server that exposes a personal Outlook (consumer Microsoft account) inbox to MCP clients like Claude Desktop. Talks to Microsoft Graph over HTTPS, uses MSAL device-code flow for OAuth, and stores tokens in the macOS Keychain.
+A [Model Context Protocol](https://modelcontextprotocol.io/) server that exposes a personal Outlook (consumer Microsoft account) inbox **and calendar** to MCP clients like Claude Desktop. Talks to Microsoft Graph over HTTPS, uses MSAL device-code flow for OAuth, and stores tokens in the OS keyring.
 
 ## Prerequisites
 
-- Node.js 20+
-- A client ID for an Azure AD app — see "Auth setup" below
-- macOS (token cache uses the system keychain via `keytar`)
+- Node.js **22.22.1+** (the lockfile is tested against Node 22 and 24).
+- A client ID for an Azure AD app — see "Auth setup" below.
+- One of the supported keyring backends:
+  - **macOS** — built-in Keychain. No setup.
+  - **Windows** — built-in Credential Manager. No setup.
+  - **Linux** — a Secret Service implementation (e.g. `gnome-keyring` or `kwallet`).
 
 ## Auth setup
 
@@ -41,10 +44,27 @@ Caveats: the consent screen will show that tool's name instead of yours; rate li
 cp .env.example .env
 # edit .env and paste your AZURE_CLIENT_ID
 
-npm install
+npm ci            # exact versions from package-lock.json
 npm run build
 npm test          # run unit tests (no live Graph calls)
 ```
+
+### Available scripts
+
+| Script                  | What it does                                            |
+| ----------------------- | ------------------------------------------------------- |
+| `npm run build`         | Compile TypeScript to `dist/`.                          |
+| `npm run dev`           | `tsc --watch` for iterative development.                |
+| `npm run start`         | Launch the compiled MCP server (only useful via stdio). |
+| `npm run whoami`        | Auth smoke test; prints `/me` from Graph.               |
+| `npm test`              | Unit tests (Graph mocked, no network).                  |
+| `npm run test:watch`    | Vitest in watch mode.                                   |
+| `npm run test:coverage` | Coverage report under `coverage/`.                      |
+| `npm run lint`          | ESLint over `src/` and `test/`.                         |
+| `npm run lint:fix`      | Lint + auto-fix.                                        |
+| `npm run format`        | Prettier write across the repo.                         |
+| `npm run format:check`  | Prettier check (CI uses this).                          |
+| `npm run clean`         | Remove `dist/` and `coverage/`.                         |
 
 ## First run (device-code auth)
 
@@ -59,7 +79,7 @@ To sign in, use a web browser to open https://microsoft.com/devicelogin
 and enter the code ABCD-1234 to authenticate.
 ```
 
-Open the URL, enter the code, sign in with your personal Microsoft account, grant the requested permissions. The script then prints your account info as JSON on stdout. Tokens are persisted to the macOS Keychain under service `personal-outlook-mcp`, account `msal-cache` — subsequent runs refresh silently.
+Open the URL, enter the code, sign in with your personal Microsoft account, grant the requested permissions. The script then prints your account info as JSON on stdout. Tokens are persisted to the OS keyring (via [`@napi-rs/keyring`](https://github.com/Brooooooklyn/keyring-node)) under service `personal-outlook-mcp`, account `msal-cache` — subsequent runs refresh silently.
 
 To sign out and forget the cached token:
 

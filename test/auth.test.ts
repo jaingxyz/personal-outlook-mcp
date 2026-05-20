@@ -34,11 +34,13 @@ vi.mock("@azure/msal-node", () => {
   };
 });
 
-vi.mock("keytar", () => ({
-  default: {
-    getPassword: async () => null,
-    setPassword: async () => undefined,
-    deletePassword: async () => undefined,
+vi.mock("@napi-rs/keyring", () => ({
+  AsyncEntry: class {
+    async getPassword(): Promise<string | null> {
+      return null;
+    }
+    async setPassword(_value: string): Promise<void> {}
+    async deletePassword(): Promise<void> {}
   },
 }));
 

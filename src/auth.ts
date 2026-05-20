@@ -7,24 +7,22 @@ import {
   type ICachePlugin,
   LogLevel,
 } from "@azure/msal-node";
-import keytar from "keytar";
+import { AsyncEntry } from "@napi-rs/keyring";
 import { config } from "./config.js";
+
+const keyringEntry = new AsyncEntry(
+  config.keychainService,
+  config.keychainAccount,
+);
 
 const keychainCachePlugin: ICachePlugin = {
   async beforeCacheAccess(ctx: TokenCacheContext): Promise<void> {
-    const data = await keytar.getPassword(
-      config.keychainService,
-      config.keychainAccount,
-    );
+    const data = await keyringEntry.getPassword();
     if (data) ctx.tokenCache.deserialize(data);
   },
   async afterCacheAccess(ctx: TokenCacheContext): Promise<void> {
     if (ctx.cacheHasChanged) {
-      await keytar.setPassword(
-        config.keychainService,
-        config.keychainAccount,
-        ctx.tokenCache.serialize(),
-      );
+      await keyringEntry.setPassword(ctx.tokenCache.serialize());
     }
   },
 };
@@ -133,5 +131,9 @@ export async function signOut(): Promise<void> {
   for (const account of accounts) {
     await tokenCache.removeAccount(account);
   }
-  await keytar.deletePassword(config.keychainService, config.keychainAccount);
+  try {
+    await keyringEntry.deletePassword();
+  } catch {
+    // Entry not found — already signed out. Don't surface as error.
+  }
 }
