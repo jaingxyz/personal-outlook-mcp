@@ -19,7 +19,7 @@ jobs:
       image: semgrep/semgrep
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Run Semgrep CI
         run: semgrep ci --config p/javascript --config p/typescript --config p/security-audit --config p/owasp-top-ten --error
