@@ -77,6 +77,17 @@ describe("read tools", () => {
     expect(c.orderby).toBeUndefined();
   });
 
+  it("search escapes backslashes BEFORE quotes (CodeQL js/incomplete-sanitization)", async () => {
+    const { search } = await import("../src/tools/read.js");
+    mock.responses.push({ method: "get", value: { value: [] } });
+    // Input contains a quote AND a literal backslash. If we escaped only quotes,
+    // a query like `a\"b` would let the embedded quote escape early.
+    await search({ query: 'a\\"b', limit: 1 });
+    const c = mock.calls[0];
+    // Expected: backslash doubled, then quote escaped: `a\\\"b`.
+    expect(c.search).toBe('"a\\\\\\"b"');
+  });
+
   it("read returns full message with formatted recipients and body", async () => {
     const { read } = await import("../src/tools/read.js");
     mock.responses.push({
