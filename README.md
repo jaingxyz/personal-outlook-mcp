@@ -8,20 +8,49 @@
 
 A [Model Context Protocol](https://modelcontextprotocol.io/) server that exposes a personal Outlook (consumer Microsoft account) inbox **and calendar** to MCP clients like Claude Desktop. Talks to Microsoft Graph over HTTPS, uses MSAL device-code flow for OAuth, and stores tokens in the OS keyring.
 
+## How it works
+
+Each user runs the server locally on their own machine and connects it to their own personal Microsoft account. There is no hosted version. **You bring your own Azure AD app registration** — see "Azure setup" below. This is intentional: your tokens never leave your machine, throttling is your own, and the consent screen shows an app you own (not someone else's).
+
+## Quickstart
+
+```bash
+# 1. Register your own Azure AD app (~5 minutes, see "Azure setup" below).
+#    Copy the Application (client) ID.
+
+# 2. Add to ~/Library/Application Support/Claude/claude_desktop_config.json:
+{
+  "mcpServers": {
+    "personal-outlook": {
+      "command": "npx",
+      "args": ["-y", "@jaingxyz/personal-outlook-mcp"],
+      "env": {
+        "AZURE_CLIENT_ID": "<YOUR-CLIENT-ID>",
+        "AZURE_TENANT": "consumers"
+      }
+    }
+  }
+}
+
+# 3. From a terminal, seed the OS keyring once:
+npx -y @jaingxyz/personal-outlook-mcp whoami
+# Paste the device code in the printed URL, sign in, approve.
+
+# 4. Restart Claude Desktop. Tools appear under personal_email_* and personal_calendar_*.
+```
+
 ## Prerequisites
 
-- Node.js **22.22.1+** (the lockfile is tested against Node 22 and 24).
-- A client ID for an Azure AD app — see "Auth setup" below.
+- Node.js **22.22.1+** (tested against Node 22 and 24).
+- An Azure AD app registration's **Application (client) ID** — instructions below.
 - One of the supported keyring backends:
   - **macOS** — built-in Keychain. No setup.
   - **Windows** — built-in Credential Manager. No setup.
-  - **Linux** — a Secret Service implementation (e.g. `gnome-keyring` or `kwallet`).
+  - **Linux** — a Secret Service implementation (e.g. `gnome-keyring` or `kwallet`) running.
 
-## Auth setup
+## Azure setup
 
-You need an Azure AD app registration's **Application (client) ID**. The recommended path is to register your own (you control the consent screen, rate limits, and scope set), but for getting started today you can borrow Microsoft's Graph Explorer client ID.
-
-### Option A — Register your own app (recommended)
+You **must** register your own Azure AD app. This server has no hosted backend — every user is their own publisher. Cost: $0, time: ~5 minutes.
 
 1. Go to https://portal.azure.com → "App registrations" → "New registration".
 2. **Supported account types**: "Accounts in any organizational directory and personal Microsoft accounts".
@@ -32,23 +61,22 @@ You need an Azure AD app registration's **Application (client) ID**. The recomme
 
 The required Graph delegated permissions (`Mail.ReadWrite`, `Mail.Send`, `offline_access`, `User.Read`) are requested at sign-in. For personal accounts the user consents at the device-code prompt — no admin consent required.
 
-> If `portal.azure.com` returns `AADSTS5000225: This tenant has been blocked due to inactivity`, your MSA's auto-created "Default Directory" tenant has been deactivated and you can't reach the portal. Either join the [Microsoft 365 Developer Program](https://developer.microsoft.com/en-us/microsoft-365/dev-program) for a fresh sandbox tenant, or use Option B below.
+> If `portal.azure.com` returns `AADSTS5000225: This tenant has been blocked due to inactivity`, your MSA's auto-created "Default Directory" tenant has been deactivated. Join the [Microsoft 365 Developer Program](https://developer.microsoft.com/en-us/microsoft-365/dev-program) for a fresh sandbox tenant, then register the app there.
 
-### Option B — Borrow a public client ID (dev-only)
+## Setup (from source, for development)
 
-If Option A is blocked for you, Microsoft publishes several public client IDs (e.g. for Graph Explorer, Azure CLI) that support device-code flow against personal accounts. You can plug one into `AZURE_CLIENT_ID` to skip the Azure portal entirely.
-
-Caveats: the consent screen will show that tool's name instead of yours; rate limits are shared with everyone using the same client ID; Microsoft can revoke or restrict it at any time. Fine for personal experimentation; not appropriate for anything you'd ship or share.
-
-## Setup
+If you want to hack on the server rather than just install it, clone and build locally:
 
 ```bash
+git clone https://github.com/jaingxyz/personal-outlook-mcp.git
+cd personal-outlook-mcp
+
 cp .env.example .env
 # edit .env and paste your AZURE_CLIENT_ID
 
 npm ci            # exact versions from package-lock.json
 npm run build
-npm test          # run unit tests (no live Graph calls)
+npm test          # unit + integration tests, no network
 ```
 
 ### Available scripts
@@ -89,16 +117,16 @@ To sign out and forget the cached token:
 node -e "import('./dist/auth.js').then(m => m.signOut())"
 ```
 
-## Using with Claude Desktop
+## Using from a local source clone
 
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json` and add:
+If you cloned the repo (instead of installing via npx), point Claude Desktop at the built script:
 
 ```json
 {
   "mcpServers": {
     "personal-outlook": {
       "command": "node",
-      "args": ["/Users/YOU/code/personal_outlook_mcp/dist/index.js"],
+      "args": ["/absolute/path/to/personal-outlook-mcp/dist/index.js"],
       "env": {
         "AZURE_CLIENT_ID": "YOUR-CLIENT-ID-HERE",
         "AZURE_TENANT": "consumers"
@@ -107,8 +135,6 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` and add:
   }
 }
 ```
-
-Substitute the absolute path to `dist/index.js` and your client ID. Restart Claude Desktop. The tools below should appear in the tool picker prefixed with `personal_email_`.
 
 > First-run auth from inside Claude Desktop is awkward because the device-code prompt is written to stderr, which Claude Desktop doesn't surface. Run `npm run whoami` from a terminal **once** before launching Claude Desktop to seed the keychain — after that, the MCP server picks up the cached token silently.
 
@@ -144,7 +170,7 @@ Calendar event times use Graph's native shape: `{ "dateTime": "2026-05-20T15:00:
 ## Troubleshooting
 
 - **`Missing required env var AZURE_CLIENT_ID`** — `.env` not present or not loaded. Check `cat .env`.
-- **`AADSTS5000225`** during sign-in — the tenant the client ID lives in is deactivated. Re-register the app in a different tenant, or switch to Option B.
+- **`AADSTS5000225`** during sign-in — the tenant your app registration lives in has been deactivated for inactivity. Create a fresh tenant via the [Microsoft 365 Developer Program](https://developer.microsoft.com/en-us/microsoft-365/dev-program) and re-register the app there.
 - **MCP client says "server crashed" with no useful output** — common cause is something writing to stdout, which corrupts the JSON-RPC stream. All non-protocol output must go to stderr.
 - **`Re-authentication required: ...`** at runtime — the cached token can't be refreshed (scopes changed, password changed, refresh expired). Run `npm run whoami` from a terminal to do device-code flow once; the MCP server picks up the new token automatically on the next tool call.
 

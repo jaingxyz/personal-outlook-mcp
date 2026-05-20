@@ -1,0 +1,34 @@
+# Smithery manifest — https://smithery.ai/docs/build/configuration
+# This server is local-only by design: each user runs it on their own machine
+# against their own Azure AD app registration. Tokens are kept in the OS
+# keyring; nothing flows through Smithery's infra.
+
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    required: [AZURE_CLIENT_ID]
+    properties:
+      AZURE_CLIENT_ID:
+        type: string
+        description: Application (client) ID from your Azure AD app registration. See README "Azure setup".
+      AZURE_TENANT:
+        type: string
+        default: consumers
+        description: |
+          Tenant identifier passed to MSAL. Use 'consumers' for personal Microsoft accounts,
+          'common' to also accept work/school, or a specific tenant GUID.
+      PERSONAL_OUTLOOK_TZ:
+        type: string
+        default: America/Los_Angeles
+        description: IANA timezone used to render calendar event times.
+  commandFunction: |-
+    (config) => ({
+      command: "npx",
+      args: ["-y", "@jaingxyz/personal-outlook-mcp"],
+      env: {
+        AZURE_CLIENT_ID: config.AZURE_CLIENT_ID,
+        AZURE_TENANT: config.AZURE_TENANT || "consumers",
+        PERSONAL_OUTLOOK_TZ: config.PERSONAL_OUTLOOK_TZ || "America/Los_Angeles"
+      }
+    })
