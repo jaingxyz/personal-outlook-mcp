@@ -107,8 +107,17 @@ Substitute the absolute path to `dist/index.js` and your client ID. Restart Clau
 | `personal_email_send_draft` | Send a previously created draft by id. |
 | `personal_email_list_attachments` | List attachments on a message (id, name, contentType, size). |
 | `personal_email_download_attachment` | Save a file attachment to disk. Defaults to `~/Downloads/personal-outlook-mcp/`. |
+| `personal_calendar_list_calendars` | List calendars (primary, holidays, custom group calendars). |
+| `personal_calendar_list_events` | Events in a date range (calendarView; recurring series expanded into occurrences). |
+| `personal_calendar_read_event` | Full event details: attendees, body, recurrence pattern. |
+| `personal_calendar_create_event` | Create an event. If attendees are listed, Graph sends invites. |
+| `personal_calendar_update_event` | Update subject/time/location/body/attendees. Refuses single occurrences of recurring series. |
+| `personal_calendar_cancel_event` | Cancel (sends notice) or hard-delete (no notice). |
+| `personal_calendar_respond_to_invite` | accept / tentativelyAccept / decline an invite. |
 
 Folder names accept Outlook well-known names: `inbox`, `sentitems`, `drafts`, `deleteditems`, `archive`, `junkemail`. Custom folders need their id (get it from `personal_email_list_folders`).
+
+Calendar event times use Graph's native shape: `{ "dateTime": "2026-05-20T15:00:00", "timeZone": "America/Los_Angeles" }`. The `dateTime` field is a local datetime with no offset; `timeZone` is an IANA name. Output times default to `America/Los_Angeles`; override with the `PERSONAL_OUTLOOK_TZ` env var.
 
 ## Troubleshooting
 
