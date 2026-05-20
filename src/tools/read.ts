@@ -94,11 +94,14 @@ export type SearchInput = z.infer<typeof searchSchema>;
 
 export async function search(input: SearchInput): Promise<unknown> {
   // Graph forbids combining $search with $orderby; results come back ranked by relevance.
+  // Escape backslashes BEFORE quotes — if we only escape quotes, an input like
+  // `a\"b` would let the embedded quote terminate the literal early.
+  const escaped = input.query.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
   const res = await graph
     .api("/me/messages")
     .top(input.limit)
     .select(messageSelect)
-    .search(`"${input.query.replace(/"/g, '\\"')}"`)
+    .search(`"${escaped}"`)
     .get();
 
   return { messages: (res.value ?? []).map(summarizeMessage) };
