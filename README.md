@@ -124,7 +124,7 @@ Calendar event times use Graph's native shape: `{ "dateTime": "2026-05-20T15:00:
 - **`Missing required env var AZURE_CLIENT_ID`** — `.env` not present or not loaded. Check `cat .env`.
 - **`AADSTS5000225`** during sign-in — the tenant the client ID lives in is deactivated. Re-register the app in a different tenant, or switch to Option B.
 - **MCP client says "server crashed" with no useful output** — common cause is something writing to stdout, which corrupts the JSON-RPC stream. All non-protocol output must go to stderr.
-- **`InteractionRequiredAuthError`** at runtime after working before — the cached refresh token expired or your password changed. Run `npm run whoami` to re-auth.
+- **`Re-authentication required: ...`** at runtime — the cached token can't be refreshed (scopes changed, password changed, refresh expired). Run `npm run whoami` from a terminal to do device-code flow once; the MCP server picks up the new token automatically on the next tool call.
 
 ## Architecture
 
