@@ -35,6 +35,7 @@ export default tseslint.config(
         process: "readonly",
         console: "readonly",
         setTimeout: "readonly",
+        fetch: "readonly",
       },
     },
     rules: {
