@@ -4,6 +4,46 @@ import { z } from "zod";
 import { graph } from "../graph.js";
 import { config } from "../config.js";
 
+// Graph IDs are opaque base64url-ish tokens. Some legitimately end in `=`;
+// others don't. Normalizers between the model/client and our tool sometimes
+// add or strip trailing `=` and Graph then rejects with "Id is malformed."
+// We can't fix the input automatically (we don't know the canonical form),
+// but we CAN detect that error and surface a useful message instead of the
+// 14-character original.
+function annotateGraphIdError(
+  err: unknown,
+  fields: Record<string, string>,
+): never {
+  const e = err as { code?: string; statusCode?: number; message?: string };
+  const msg = e?.message ?? "";
+  if (/id is malformed|invalid id|cast to.*failed/i.test(msg)) {
+    const lines: string[] = [];
+    for (const [name, value] of Object.entries(fields)) {
+      const trailingEqs = value.length - value.replace(/=+$/, "").length;
+      lines.push(
+        `  ${name}: ends-with-=:${value.endsWith("=")}, trailing-eqs:${trailingEqs}, last-24:...${value.slice(-24)}`,
+      );
+    }
+    throw new Error(
+      `Graph rejected an id as malformed.\n${lines.join("\n")}\nIf the id was copied from a list/search call, try sending it byte-for-byte. Some normalizers add or strip base64 '=' padding that Graph rejects. Original error: ${msg}`,
+    );
+  }
+  throw err;
+}
+
+// Wrap a Graph SDK promise so an "Id is malformed" rejection carries
+// diagnostic context about which field(s) were used in the URL.
+async function withIdContext<T>(
+  fields: Record<string, string>,
+  fn: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    annotateGraphIdError(err, fields);
+  }
+}
+
 const dateTimeWithTz = z.object({
   dateTime: z
     .string()
@@ -159,14 +199,18 @@ export async function listEvents(input: ListEventsInput): Promise<unknown> {
     ? `/me/calendars/${encodeURIComponent(input.calendarId)}/calendarView`
     : "/me/calendarView";
 
-  const res = await graph
-    .api(path)
-    .query({ startDateTime: input.start, endDateTime: input.end })
-    .top(input.limit)
-    .header("Prefer", preferTzHeader())
-    .select(eventSelect)
-    .orderby("start/dateTime")
-    .get();
+  const res = await withIdContext(
+    input.calendarId ? { calendarId: input.calendarId } : {},
+    () =>
+      graph
+        .api(path)
+        .query({ startDateTime: input.start, endDateTime: input.end })
+        .top(input.limit)
+        .header("Prefer", preferTzHeader())
+        .select(eventSelect)
+        .orderby("start/dateTime")
+        .get(),
+  );
 
   return {
     timeZone: config.defaultTimeZone,
@@ -182,10 +226,12 @@ export const readEventSchema = z.object({
 export type ReadEventInput = z.infer<typeof readEventSchema>;
 
 export async function readEvent(input: ReadEventInput): Promise<unknown> {
-  const e = await graph
-    .api(`/me/events/${encodeURIComponent(input.eventId)}`)
-    .header("Prefer", preferTzHeader())
-    .get();
+  const e = await withIdContext({ eventId: input.eventId }, () =>
+    graph
+      .api(`/me/events/${encodeURIComponent(input.eventId)}`)
+      .header("Prefer", preferTzHeader())
+      .get(),
+  );
 
   return {
     ...summarizeEvent(e),
@@ -239,10 +285,10 @@ export async function createEvent(input: CreateEventInput): Promise<unknown> {
     payload.body = { contentType: input.bodyFormat, content: input.body };
   }
 
-  const created = await graph
-    .api(path)
-    .header("Prefer", preferTzHeader())
-    .post(payload);
+  const created = await withIdContext(
+    input.calendarId ? { calendarId: input.calendarId } : {},
+    () => graph.api(path).header("Prefer", preferTzHeader()).post(payload),
+  );
   return summarizeEvent(created);
 }
 
@@ -264,10 +310,12 @@ export type UpdateEventInput = z.infer<typeof updateEventSchema>;
 export async function updateEvent(input: UpdateEventInput): Promise<unknown> {
   // Single-occurrence edits of recurring series have a different code path
   // in Graph and additional gotchas. Refuse them in MVP.
-  const existing = await graph
-    .api(`/me/events/${encodeURIComponent(input.eventId)}`)
-    .select("type,seriesMasterId")
-    .get();
+  const existing = await withIdContext({ eventId: input.eventId }, () =>
+    graph
+      .api(`/me/events/${encodeURIComponent(input.eventId)}`)
+      .select("type,seriesMasterId")
+      .get(),
+  );
 
   if (existing.type === "occurrence" || existing.type === "exception") {
     throw new Error(
@@ -293,17 +341,19 @@ export async function updateEvent(input: UpdateEventInput): Promise<unknown> {
     return { ok: true, eventId: input.eventId, changed: [] };
   }
 
-  await graph
-    .api(`/me/events/${encodeURIComponent(input.eventId)}`)
-    .patch(patch);
+  await withIdContext({ eventId: input.eventId }, () =>
+    graph.api(`/me/events/${encodeURIComponent(input.eventId)}`).patch(patch),
+  );
 
   // Graph ignores Prefer: outlook.timezone on PATCH responses for events on
   // personal MSAs, so re-GET to render times in the configured zone.
-  const updated = await graph
-    .api(`/me/events/${encodeURIComponent(input.eventId)}`)
-    .header("Prefer", preferTzHeader())
-    .select(eventSelect)
-    .get();
+  const updated = await withIdContext({ eventId: input.eventId }, () =>
+    graph
+      .api(`/me/events/${encodeURIComponent(input.eventId)}`)
+      .header("Prefer", preferTzHeader())
+      .select(eventSelect)
+      .get(),
+  );
 
   return {
     ok: true,
@@ -335,13 +385,17 @@ export type CancelEventInput = z.infer<typeof cancelEventSchema>;
 
 export async function cancelEvent(input: CancelEventInput): Promise<unknown> {
   if (input.hardDelete) {
-    await graph.api(`/me/events/${encodeURIComponent(input.eventId)}`).delete();
+    await withIdContext({ eventId: input.eventId }, () =>
+      graph.api(`/me/events/${encodeURIComponent(input.eventId)}`).delete(),
+    );
     return { ok: true, eventId: input.eventId, mode: "hardDelete" };
   }
 
-  await graph
-    .api(`/me/events/${encodeURIComponent(input.eventId)}/cancel`)
-    .post(input.comment ? { Comment: input.comment } : {});
+  await withIdContext({ eventId: input.eventId }, () =>
+    graph
+      .api(`/me/events/${encodeURIComponent(input.eventId)}/cancel`)
+      .post(input.comment ? { Comment: input.comment } : {}),
+  );
 
   return { ok: true, eventId: input.eventId, mode: "cancel" };
 }
@@ -366,9 +420,11 @@ export async function respondToInvite(input: RespondInput): Promise<unknown> {
   };
   if (input.comment) payload.comment = input.comment;
 
-  await graph
-    .api(`/me/events/${encodeURIComponent(input.eventId)}/${input.response}`)
-    .post(payload);
+  await withIdContext({ eventId: input.eventId }, () =>
+    graph
+      .api(`/me/events/${encodeURIComponent(input.eventId)}/${input.response}`)
+      .post(payload),
+  );
 
   return { ok: true, eventId: input.eventId, response: input.response };
 }

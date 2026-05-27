@@ -175,4 +175,49 @@ describe("calendar tools", () => {
       "/me/events/e1/tentativelyAccept",
     ]);
   });
+
+  it("createEvent annotates 'Id is malformed' with calendarId diagnostics (regression)", async () => {
+    // Repro: a stray trailing '=' was appended to a calendarId by an
+    // upstream normalizer, Graph rejected with the unhelpful 14-char string
+    // "Id is malformed.". The wrapper should surface the suspect field +
+    // its trailing-equals state so the model/user can see what to fix.
+    const { createEvent } = await import("../src/tools/calendar.js");
+    const graphErr = Object.assign(new Error("Id is malformed."), {
+      statusCode: 400,
+    });
+    mock.responses.push({ method: "post", value: graphErr, throws: true });
+
+    const badId = "AQMkADAwSomeBase64UrlIshThing=";
+    await expect(
+      createEvent({
+        subject: "x",
+        start: { dateTime: "2026-06-04T08:30:00", timeZone: "UTC" },
+        end: { dateTime: "2026-06-04T09:00:00", timeZone: "UTC" },
+        attendees: [],
+        bodyFormat: "text",
+        isOnlineMeeting: false,
+        calendarId: badId,
+      }),
+    ).rejects.toThrow(
+      /Graph rejected an id as malformed[\s\S]*calendarId.*ends-with-=:true.*trailing-eqs:1/,
+    );
+  });
+
+  it("createEvent passes through non-malformed-id errors unchanged", async () => {
+    const { createEvent } = await import("../src/tools/calendar.js");
+    const otherErr = new Error("Throttled");
+    mock.responses.push({ method: "post", value: otherErr, throws: true });
+
+    await expect(
+      createEvent({
+        subject: "x",
+        start: { dateTime: "2026-06-04T08:30:00", timeZone: "UTC" },
+        end: { dateTime: "2026-06-04T09:00:00", timeZone: "UTC" },
+        attendees: [],
+        bodyFormat: "text",
+        isOnlineMeeting: false,
+        calendarId: "anything",
+      }),
+    ).rejects.toThrow("Throttled");
+  });
 });
