@@ -61,6 +61,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_email_list_folders",
     {
+      title: "List mail folders",
       description:
         "List the user's mail folders (Inbox, Sent Items, custom folders, etc.) with id, display name, and unread/total counts.",
       inputSchema: listFoldersSchema.shape,
@@ -71,6 +72,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_email_list_recent",
     {
+      title: "Recent messages in folder",
       description:
         "List the most recent messages in a folder, newest first. Defaults to inbox.",
       inputSchema: listRecentSchema.shape,
@@ -81,6 +83,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_email_search",
     {
+      title: "Search inbox",
       description:
         "Search messages across the mailbox by free-text query. Supports Graph KQL operators (from:, subject:, hasAttachment:true, etc.). Results are ranked by relevance, not date.",
       inputSchema: searchSchema.shape,
@@ -91,6 +94,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_email_read",
     {
+      title: "Read message",
       description:
         "Fetch a single message by id, including its body. Use the 'id' field returned by list_recent or search.",
       inputSchema: readSchema.shape,
@@ -101,6 +105,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_email_mark_read",
     {
+      title: "Mark message read/unread",
       description:
         "Mark a message as read or unread. Pass isRead=false to mark unread.",
       inputSchema: markReadSchema.shape,
@@ -112,6 +117,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_email_move",
     {
+      title: "Move message",
       description:
         "Move a message to another folder (by id or well-known name). The message gets a new id in the destination folder.",
       inputSchema: moveSchema.shape,
@@ -123,6 +129,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_email_delete",
     {
+      title: "Delete message",
       description:
         "Delete a message. By default soft-deletes (moves to Deleted Items). Pass hardDelete=true to permanently delete — not recoverable.",
       inputSchema: deleteSchema.shape,
@@ -134,6 +141,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_email_send",
     {
+      title: "Send email",
       description:
         "Send a new email immediately. A copy is saved to Sent Items. Use create_draft instead if you want to review in Outlook before sending.",
       inputSchema: sendSchema.shape,
@@ -145,6 +153,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_email_reply",
     {
+      title: "Reply to message",
       description:
         "Reply to an existing message. Sends immediately. Pass replyAll=true to reply to all recipients of the original.",
       inputSchema: replySchema.shape,
@@ -156,6 +165,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_email_create_draft",
     {
+      title: "Create draft",
       description:
         "Create a draft email in the Drafts folder without sending. Returns a draftId you can pass to personal_email_send_draft.",
       inputSchema: createDraftSchema.shape,
@@ -166,6 +176,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_email_send_draft",
     {
+      title: "Send draft",
       description: "Send a previously created draft by id.",
       inputSchema: sendDraftSchema.shape,
       annotations: { destructiveHint: true },
@@ -176,6 +187,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_email_list_attachments",
     {
+      title: "List message attachments",
       description:
         "List attachments on a message, with id, name, contentType, and size in bytes.",
       inputSchema: listAttachmentsSchema.shape,
@@ -186,6 +198,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_email_download_attachment",
     {
+      title: "Download attachment",
       description:
         "Download a file attachment to disk. Defaults to ~/Downloads/personal-outlook-mcp/. Returns the absolute path. Item and reference attachments are not supported.",
       inputSchema: downloadAttachmentSchema.shape,
@@ -196,6 +209,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_calendar_list_calendars",
     {
+      title: "List calendars",
       description:
         "List the user's calendars (primary, birthdays, holidays, custom). Returns id, name, isDefault, canEdit.",
       inputSchema: listCalendarsSchema.shape,
@@ -206,6 +220,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_calendar_list_events",
     {
+      title: "List events in range",
       description:
         "List events in a date range using calendarView (recurring series are expanded into individual occurrences). Provide ISO datetimes for start and end. Defaults to the primary calendar.",
       inputSchema: listEventsSchema.shape,
@@ -216,6 +231,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_calendar_read_event",
     {
+      title: "Read event",
       description:
         "Read full details of a single event including body and recurrence pattern.",
       inputSchema: readEventSchema.shape,
@@ -226,6 +242,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_calendar_create_event",
     {
+      title: "Create event",
       description:
         "Create a new event. Times use {dateTime, timeZone} where dateTime is local-form (no offset) and timeZone is an IANA name. If attendees are provided, Graph sends invites automatically.",
       inputSchema: createEventSchema.shape,
@@ -237,6 +254,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_calendar_update_event",
     {
+      title: "Update event",
       description:
         "Update an event's subject, time, location, body, or attendees. Errors if eventId refers to a single occurrence/exception of a recurring series — edit the series master or cancel+recreate instead.",
       inputSchema: updateEventSchema.shape,
@@ -248,6 +266,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_calendar_cancel_event",
     {
+      title: "Cancel event",
       description:
         "Cancel an event. Default mode sends a cancellation notice to attendees (use this for meetings). hardDelete=true skips the notice and just deletes — appropriate for events with no attendees.",
       inputSchema: cancelEventSchema.shape,
@@ -259,6 +278,7 @@ export function buildServer(): McpServer {
   server.registerTool(
     "personal_calendar_respond_to_invite",
     {
+      title: "Respond to invite",
       description:
         "Respond to a meeting invite as accept, tentativelyAccept, or decline. Optionally include a comment and choose whether to send a response email to the organizer.",
       inputSchema: respondSchema.shape,
