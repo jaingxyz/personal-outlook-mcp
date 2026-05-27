@@ -18,8 +18,12 @@ export interface RecordedCall {
 export interface MockGraph {
   api: ReturnType<typeof vi.fn>;
   calls: RecordedCall[];
-  /** Queue of responses keyed by HTTP method; pop in order. */
-  responses: { method: string; value: unknown }[];
+  /**
+   * Queue of responses keyed by HTTP method; pop in order. Set `throws: true`
+   * to make the wrapped Graph SDK promise reject with the queued value
+   * (which should be an Error or an object with `.message`).
+   */
+  responses: { method: string; value: unknown; throws?: boolean }[];
 }
 
 export function makeMockGraph(): MockGraph {
@@ -88,7 +92,7 @@ export function makeMockGraph(): MockGraph {
 }
 
 function popResponse(
-  responses: { method: string; value: unknown }[],
+  responses: { method: string; value: unknown; throws?: boolean }[],
   method: string,
 ): unknown {
   const idx = responses.findIndex((r) => r.method === method);
@@ -99,5 +103,7 @@ function popResponse(
       })`,
     );
   }
-  return responses.splice(idx, 1)[0].value;
+  const r = responses.splice(idx, 1)[0];
+  if (r.throws) throw r.value;
+  return r.value;
 }
