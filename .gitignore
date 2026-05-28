@@ -18,6 +18,7 @@ coverage/
 # Personal notes (never commit)
 LEARNINGS.md
 NOTES.md
+SECURITY-RISK-MATRIX.md
 
 # Local stats history (gitignored — strictly your machine)
 stats.jsonl
