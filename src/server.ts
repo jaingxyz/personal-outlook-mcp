@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 jaingxyz
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { config } from "./config.js";
 import {
   listFolders,
   listFoldersSchema,
@@ -55,7 +56,7 @@ import {
 export function buildServer(): McpServer {
   const server = new McpServer({
     name: "personal-outlook-mcp",
-    version: "0.1.0",
+    version: config.version,
   });
 
   server.registerTool(
@@ -74,7 +75,7 @@ export function buildServer(): McpServer {
     {
       title: "Recent messages in folder",
       description:
-        "List the most recent messages in a folder, newest first. Defaults to inbox.",
+        "List the most recent messages in a folder, newest first. Defaults to inbox. Returns up to `limit` (max 100) plus a `nextCursor`; pass it back as `cursor` to page through more.",
       inputSchema: listRecentSchema.shape,
     },
     async (args) => toolResult(await listRecent(args)),
@@ -85,7 +86,7 @@ export function buildServer(): McpServer {
     {
       title: "Search inbox",
       description:
-        "Search messages across the mailbox by free-text query. Supports Graph KQL operators (from:, subject:, hasAttachment:true, etc.). Results are ranked by relevance, not date.",
+        "Search messages across the mailbox by free-text query. Supports Graph KQL operators (from:, subject:, hasAttachment:true, etc.). Results are ranked by relevance, not date. Returns up to `limit` (max 100) plus a `nextCursor`; pass it back as `cursor` to page through more.",
       inputSchema: searchSchema.shape,
     },
     async (args) => toolResult(await search(args)),

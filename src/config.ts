@@ -34,6 +34,29 @@ function loadDotEnv(): void {
 
 loadDotEnv();
 
+function readVersion(): string {
+  // package.json sits at the repo root, one level above dist/ (or src/ in
+  // dev). Read it at runtime — a static `import` would pull a file outside
+  // rootDir ("src") and break the tsc build / dist layout.
+  const here = dirname(fileURLToPath(import.meta.url));
+  const candidates = [
+    resolve(here, "../package.json"),
+    resolve(here, "../../package.json"),
+  ];
+  for (const path of candidates) {
+    if (!existsSync(path)) continue;
+    try {
+      const pkg = JSON.parse(readFileSync(path, "utf8")) as {
+        version?: string;
+      };
+      if (pkg.version) return pkg.version;
+    } catch {
+      // Malformed package.json — fall through to the next candidate.
+    }
+  }
+  return "0.0.0";
+}
+
 function required(name: string): string {
   const v = process.env[name];
   if (!v) {
@@ -45,6 +68,7 @@ function required(name: string): string {
 }
 
 export const config = {
+  version: readVersion(),
   clientId: required("AZURE_CLIENT_ID"),
   tenant: process.env.AZURE_TENANT || "consumers",
   scopes: [
