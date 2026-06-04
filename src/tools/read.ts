@@ -325,19 +325,36 @@ function stripHtml(html: string): string {
   return out;
 }
 
+// The handful of named entities worth decoding for readability.
+const HTML_ENTITIES: Record<string, string> = {
+  "&nbsp;": " ",
+  "&amp;": "&",
+  "&lt;": "<",
+  "&gt;": ">",
+  "&quot;": '"',
+  "&#39;": "'",
+  "&apos;": "'",
+};
+
+// Decode entities in a SINGLE pass so each source entity is resolved exactly
+// once. Decoding &amp; in its own .replace() before the others would
+// double-unescape: "&amp;lt;" (the literal text "&lt;") would become "&lt;"
+// and then a later pass would wrongly turn it into "<". One regex + lookup
+// avoids that (CodeQL js/double-escaping).
+function decodeEntities(text: string): string {
+  return text.replace(
+    /&nbsp;|&amp;|&lt;|&gt;|&quot;|&#39;|&apos;/gi,
+    (m) => HTML_ENTITIES[m.toLowerCase()] ?? m,
+  );
+}
+
 // Cheap HTML→text for readability (NOT sanitization — the result is returned
 // as text to the model, never rendered). Structural stripping is done by the
 // linear stripHtml pass; here we only decode the handful of entities that
 // actually show up and collapse whitespace. These remaining regexes are all
 // fixed/linear, so they add no backtracking risk.
 export function htmlToText(html: string): string {
-  return stripHtml(html)
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;|&apos;/gi, "'")
+  return decodeEntities(stripHtml(html))
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();

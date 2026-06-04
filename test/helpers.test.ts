@@ -54,6 +54,15 @@ describe("htmlToText", () => {
     expect(htmlToText("<p>a</p><p></p><p></p><p>b</p>")).toBe("a\n\nb");
   });
 
+  it("decodes entities in a single pass (no double-unescaping)", () => {
+    // "&amp;lt;" is the literal text "&lt;". A naive multi-pass decode would
+    // turn it into "<"; a single pass must leave it as "&lt;".
+    expect(htmlToText("&amp;lt;")).toBe("&lt;");
+    expect(htmlToText("a &amp;amp; b")).toBe("a &amp; b");
+    // Case-insensitive entities still decode.
+    expect(htmlToText("Tom &AMP; Jerry")).toBe("Tom & Jerry");
+  });
+
   it("strips HTML comments without leaking their tail (even when they contain '>')", () => {
     expect(htmlToText("<!-- promo: SAVE>20% -->X")).toBe("X");
     expect(htmlToText("a<!--[if mso]>junk<![endif]-->b")).toBe("ab");
