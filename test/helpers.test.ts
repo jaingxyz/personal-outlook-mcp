@@ -2,7 +2,7 @@
 // Copyright (C) 2026 jaingxyz
 import { describe, it, expect } from "vitest";
 import { homedir } from "node:os";
-import { formatRecipient } from "../src/tools/read.js";
+import { formatRecipient, htmlToText } from "../src/tools/read.js";
 import { sanitizeFilename, expandHome } from "../src/tools/attachments.js";
 import { formatEmail, summarizeEvent } from "../src/tools/calendar.js";
 
@@ -28,6 +28,54 @@ describe("formatRecipient", () => {
     expect(formatRecipient(undefined)).toBeNull();
     expect(formatRecipient({})).toBeNull();
     expect(formatRecipient({ emailAddress: {} })).toBeNull();
+  });
+});
+
+describe("htmlToText", () => {
+  it("drops script and style blocks entirely", () => {
+    const out = htmlToText(
+      "<style>.a{color:red}</style>Hi<script>alert(1)</script> there",
+    );
+    expect(out).not.toContain("color");
+    expect(out).not.toContain("alert");
+    expect(out).toContain("Hi");
+    expect(out).toContain("there");
+  });
+
+  it("converts <br> and block tags to newlines", () => {
+    expect(htmlToText("a<br>b")).toBe("a\nb");
+    // Both the open and close of a block boundary break the line; adjacent
+    // paragraphs end up separated by a blank line.
+    expect(htmlToText("<p>one</p><p>two</p>")).toBe("one\n\ntwo");
+  });
+
+  it("decodes common entities and collapses excess blank lines", () => {
+    expect(htmlToText("Tom &amp; Jerry &lt;3")).toBe("Tom & Jerry <3");
+    expect(htmlToText("<p>a</p><p></p><p></p><p>b</p>")).toBe("a\n\nb");
+  });
+
+  it("strips HTML comments without leaking their tail (even when they contain '>')", () => {
+    expect(htmlToText("<!-- promo: SAVE>20% -->X")).toBe("X");
+    expect(htmlToText("a<!--[if mso]>junk<![endif]-->b")).toBe("ab");
+  });
+
+  it("separates adjacent blocks even when opening tags are unclosed", () => {
+    // Nested divs without a symmetric close per line must not glue text.
+    expect(htmlToText("<div>Line one<div>Line two</div>")).toBe(
+      "Line one\nLine two",
+    );
+  });
+
+  it("keeps a stray '<' that never closes as literal text", () => {
+    expect(htmlToText("a < b")).toBe("a < b");
+  });
+
+  it("runs in linear time on adversarial input (no catastrophic backtracking)", () => {
+    // Pathological body that pinned the old regex-chain version for seconds.
+    const evil = "a < b ".repeat(100000); // 600KB of unterminated '<'
+    const start = performance.now();
+    htmlToText(evil);
+    expect(performance.now() - start).toBeLessThan(1000);
   });
 });
 
