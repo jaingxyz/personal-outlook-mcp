@@ -14,6 +14,8 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) server that exposes
 
 Each user runs the server locally on their own machine and connects it to their own personal Microsoft account. There is no hosted version. **You bring your own Azure AD app registration** — see "Azure setup" below. This is intentional: your tokens never leave your machine, throttling is your own, and the consent screen shows an app you own (not someone else's).
 
+> **"Personal" here describes the _account type_, not a no-setup mode.** It means a consumer Microsoft account (`@outlook.com`, `@hotmail.com`, `@live.com`) as opposed to a work/school account. It does **not** mean a shared/hosted client you can use without configuration — you still complete the one-time Azure app registration below to get an `AZURE_CLIENT_ID`. Likewise, the **device-code flow** is just the sign-in _style_; it still authenticates through your app registration, so it can't be used to skip that step.
+
 ## Quickstart
 
 ```bash
@@ -63,7 +65,10 @@ You **must** register your own Azure AD app. This server has no hosted backend �
 
 The required Graph delegated permissions (`Mail.ReadWrite`, `Mail.Send`, `offline_access`, `User.Read`) are requested at sign-in. For personal accounts the user consents at the device-code prompt — no admin consent required.
 
-> If `portal.azure.com` returns `AADSTS5000225: This tenant has been blocked due to inactivity`, your MSA's auto-created "Default Directory" tenant has been deactivated. Join the [Microsoft 365 Developer Program](https://developer.microsoft.com/en-us/microsoft-365/dev-program) for a fresh sandbox tenant, then register the app there.
+> If `portal.azure.com` (or `entra.microsoft.com`) returns `AADSTS5000225: This tenant has been blocked due to inactivity`, your MSA's auto-created "Default Directory" tenant has been deactivated and the sign-in dropdown offers only that dead tenant — so you can't register an app there. You need a **live** tenant instead. Two options:
+>
+> 1. **Microsoft 365 Developer Program** — https://developer.microsoft.com/en-us/microsoft-365/dev-program provisions a fresh sandbox tenant. (Eligibility was tightened in 2024, so instant free signup isn't guaranteed for every account.)
+> 2. **A fresh Microsoft account** — a brand-new `@outlook.com` gets its own unblocked tenant. Register the app there as "any org directory **and** personal Microsoft accounts," then sign in at `whoami` time with whichever account owns the mailbox you actually want to read (the multi-tenant registration accepts either).
 
 ## Setup (from source, for development)
 
@@ -186,7 +191,7 @@ Calendar event times use Graph's native shape: `{ "dateTime": "2026-05-20T15:00:
 ## Troubleshooting
 
 - **`Missing required env var AZURE_CLIENT_ID`** — `.env` not present or not loaded. Check `cat .env`.
-- **`AADSTS5000225`** during sign-in — the tenant your app registration lives in has been deactivated for inactivity. Create a fresh tenant via the [Microsoft 365 Developer Program](https://developer.microsoft.com/en-us/microsoft-365/dev-program) and re-register the app there.
+- **`AADSTS5000225`** during sign-in (or while trying to register the app) — the tenant your app registration lives in has been deactivated for inactivity, and the portal's tenant dropdown offers only that dead tenant. You need a live tenant: either the [Microsoft 365 Developer Program](https://developer.microsoft.com/en-us/microsoft-365/dev-program) sandbox (subject to eligibility) or a fresh `@outlook.com` account (whose new tenant isn't blocked). Register the app as multi-tenant + personal accounts there, then sign in with whichever account owns the mailbox you want. See "Azure setup" for the full note.
 - **MCP client says "server crashed" with no useful output** — common cause is something writing to stdout, which corrupts the JSON-RPC stream. All non-protocol output must go to stderr.
 - **`Re-authentication required: ...`** at runtime — the cached token can't be refreshed (scopes changed, password changed, refresh expired). Run `npm run whoami` from a terminal to do device-code flow once; the MCP server picks up the new token automatically on the next tool call.
 
