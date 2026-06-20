@@ -56,11 +56,13 @@ npx -y @jaingxyz/personal-outlook-mcp whoami
 
 You **must** register your own Azure AD app. This server has no hosted backend — every user is their own publisher. Cost: $0, time: ~5 minutes.
 
-1. Go to https://portal.azure.com → "App registrations" → "New registration".
-2. **Supported account types**: "Accounts in any organizational directory and personal Microsoft accounts".
+> **You do NOT need a paid Azure subscription.** Sign into https://entra.microsoft.com with your personal Microsoft account and a free "Default Directory" tenant is created for you automatically; registering an app in it costs nothing. Microsoft's generic quickstart says an "active subscription" is required — that does **not** apply to registering an app with a personal account.
+
+1. Go to https://entra.microsoft.com (sign in with your personal Microsoft account) → **App registrations** → "New registration". (`portal.azure.com` works too, but the Entra admin center is smoother for personal accounts.)
+2. **[REQUIRED]** **Supported account types**: "Accounts in any organizational directory **and** personal Microsoft accounts". This is load-bearing — the `consumers` authority this server uses only accepts personal Microsoft accounts. Pick the wrong option here and sign-in fails instantly with `invalid_grant` and no device code (see Troubleshooting).
 3. Leave the redirect URI blank. Click Register.
 4. In the new app: **Authentication** → "Add a platform" → "Mobile and desktop applications" → add the redirect URI `https://login.microsoftonline.com/common/oauth2/nativeclient`.
-5. Same page, scroll to **Advanced settings** → set "Allow public client flows" = **Yes**. Save.
+5. **[REQUIRED]** Same page, scroll to **Advanced settings** → set "Allow public client flows" = **Yes**. Save. Device-code flow is a public-client flow; without this, sign-in fails with `invalid_grant`.
 6. Copy the **Application (client) ID** from the Overview page.
 
 The required Graph delegated permissions (`Mail.ReadWrite`, `Mail.Send`, `offline_access`, `User.Read`) are requested at sign-in. For personal accounts the user consents at the device-code prompt — no admin consent required.
@@ -191,6 +193,7 @@ Calendar event times use Graph's native shape: `{ "dateTime": "2026-05-20T15:00:
 ## Troubleshooting
 
 - **`Missing required env var AZURE_CLIENT_ID`** — `.env` not present or not loaded. Check `cat .env`.
+- **`AuthError: invalid_grant` thrown immediately, with no device code printed** — the app registration is misconfigured, not your sign-in. The `consumers` authority only accepts personal Microsoft accounts via a public client. Two causes: (1) **Supported account types** doesn't include personal Microsoft accounts — set it to "any org directory **and** personal Microsoft accounts" (manifest `signInAudience: AzureADandPersonalMicrosoftAccount`); (2) **Allow public client flows** is not **Yes**. Both live on the app's **Authentication** blade — see "Azure setup" steps 2 and 5. Fix and re-run `npm run whoami`; you should now get a real device code.
 - **`AADSTS5000225`** during sign-in (or while trying to register the app) — the tenant your app registration lives in has been deactivated for inactivity, and the portal's tenant dropdown offers only that dead tenant. You need a live tenant: either the [Microsoft 365 Developer Program](https://developer.microsoft.com/en-us/microsoft-365/dev-program) sandbox (subject to eligibility) or a fresh `@outlook.com` account (whose new tenant isn't blocked). Register the app as multi-tenant + personal accounts there, then sign in with whichever account owns the mailbox you want. See "Azure setup" for the full note.
 - **MCP client says "server crashed" with no useful output** — common cause is something writing to stdout, which corrupts the JSON-RPC stream. All non-protocol output must go to stderr.
 - **`Re-authentication required: ...`** at runtime — the cached token can't be refreshed (scopes changed, password changed, refresh expired). Run `npm run whoami` from a terminal to do device-code flow once; the MCP server picks up the new token automatically on the next tool call.
