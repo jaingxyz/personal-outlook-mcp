@@ -113,8 +113,7 @@ export function summarizeEvent(
     organizer: formatEmail(
       (
         e.organizer as
-          | { emailAddress?: { name?: string; address?: string } }
-          | undefined
+          { emailAddress?: { name?: string; address?: string } } | undefined
       )?.emailAddress,
     ),
     attendees: ((e.attendees as Array<Record<string, unknown>>) ?? []).map(
