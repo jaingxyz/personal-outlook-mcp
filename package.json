@@ -58,6 +58,9 @@
   "engines": {
     "node": ">=22.22.1"
   },
+  "overrides": {
+    "@hono/node-server": "^2.0.5"
+  },
   "dependencies": {
     "@azure/msal-node": "^5.2.2",
     "@microsoft/microsoft-graph-client": "^3.0.7",
