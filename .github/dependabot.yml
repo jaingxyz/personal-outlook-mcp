@@ -10,6 +10,12 @@ updates:
       default-days: 7
     open-pull-requests-limit: 10
     groups:
+      # vitest and its plugins pin each other as exact peers, so they must move in one
+      # PR — including majors. Listed first: a dependency joins the first matching group.
+      vitest:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
       production-minor-and-patch:
         dependency-type: production
         update-types:
