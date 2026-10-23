@@ -4,8 +4,6 @@
 [![CodeQL](https://github.com/jaingxyz/personal-outlook-mcp/actions/workflows/codeql.yml/badge.svg)](https://github.com/jaingxyz/personal-outlook-mcp/actions/workflows/codeql.yml)
 [![Semgrep](https://github.com/jaingxyz/personal-outlook-mcp/actions/workflows/semgrep.yml/badge.svg)](https://github.com/jaingxyz/personal-outlook-mcp/actions/workflows/semgrep.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/jaingxyz/personal-outlook-mcp/badge)](https://scorecard.dev/viewer/?uri=github.com/jaingxyz/personal-outlook-mcp)
-[![npm version](https://img.shields.io/npm/v/@jaingxyz/personal-outlook-mcp?label=npm)](https://www.npmjs.com/package/@jaingxyz/personal-outlook-mcp)
-[![Smithery](https://smithery.ai/badge/jaingxyz/personal-outlook-mcp)](https://smithery.ai/servers/jaingxyz/personal-outlook-mcp)
 [![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](./LICENSE)
 
 A [Model Context Protocol](https://modelcontextprotocol.io/) server that exposes a personal Outlook (consumer Microsoft account) inbox **and calendar** to MCP clients like Claude Desktop. Talks to Microsoft Graph over HTTPS, uses MSAL device-code flow for OAuth, and stores tokens in the OS keyring.
@@ -22,12 +20,16 @@ Each user runs the server locally on their own machine and connects it to their 
 # 1. Register your own Azure AD app (~5 minutes, see "Azure setup" below).
 #    Copy the Application (client) ID.
 
-# 2. Add to ~/Library/Application Support/Claude/claude_desktop_config.json:
+# 2. Clone and build:
+git clone https://github.com/jaingxyz/personal-outlook-mcp && cd personal-outlook-mcp
+npm ci && npm run build
+
+# 3. Add to ~/Library/Application Support/Claude/claude_desktop_config.json:
 {
   "mcpServers": {
     "personal-outlook": {
-      "command": "npx",
-      "args": ["-y", "@jaingxyz/personal-outlook-mcp"],
+      "command": "node",
+      "args": ["/absolute/path/to/personal-outlook-mcp/dist/index.js"],
       "env": {
         "AZURE_CLIENT_ID": "<YOUR-CLIENT-ID>",
         "AZURE_TENANT": "consumers"
@@ -36,11 +38,11 @@ Each user runs the server locally on their own machine and connects it to their 
   }
 }
 
-# 3. From a terminal, seed the OS keyring once:
-npx -y @jaingxyz/personal-outlook-mcp whoami
+# 4. From the clone, seed the OS keyring once:
+npm run whoami
 # Paste the device code in the printed URL, sign in, approve.
 
-# 4. Restart Claude Desktop. Tools appear under personal_email_* and personal_calendar_*.
+# 5. Restart Claude Desktop. Tools appear under personal_email_* and personal_calendar_*.
 ```
 
 ## Prerequisites
@@ -128,7 +130,7 @@ node -e "import('./dist/auth.js').then(m => m.signOut())"
 
 ## MCPB bundle (Claude Desktop one-click install)
 
-A pre-packaged [MCPB bundle](https://github.com/anthropics/mcpb) is built from the `npm run bundle` script. **Currently macOS arm64 only** — the bundle includes a platform-specific native binary for the OS keyring backend, and we ship one platform at a time. Other OSes should install via `npx -y @jaingxyz/personal-outlook-mcp` (which fetches the right native binary at install time).
+A pre-packaged [MCPB bundle](https://github.com/anthropics/mcpb) is built from the `npm run bundle` script. **Currently macOS arm64 only** — the bundle includes a platform-specific native binary for the OS keyring backend, and we ship one platform at a time. Other OSes should run from a source clone (see Quickstart).
 
 To build and test locally:
 
@@ -142,7 +144,7 @@ The bundle's manifest declares three user-config fields, prompted at install: Az
 
 ## Using from a local source clone
 
-If you cloned the repo (instead of installing via npx), point Claude Desktop at the built script:
+Point Claude Desktop at the built script in your clone:
 
 ```json
 {
